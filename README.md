@@ -164,6 +164,8 @@ tests/         Unit tests
 ## Project Links
 
 - [Public demo](docs/demo.md): synthetic smoke demo and safe sharing rules.
+- [Hugging Face report checker](https://huggingface.co/spaces/Iamarric/avatar-video-workbench-report-checker):
+  public validator for sanitized Vertex reports and dataset manifests.
 - [Community](docs/community.md): issues, discussions, and useful feedback.
 - [Changelog](CHANGELOG.md): release history and notable changes.
 - [Architecture](docs/architecture.md): repository boundary and pipeline
