@@ -13,6 +13,10 @@ DEFAULT_EXCLUDES = {
     ".pytest_cache",
     "dist",
     "build",
+    "runs",
+    "datasets",
+    "outputs",
+    "model-cache",
 }
 
 DISALLOWED_PUBLIC_EXTENSIONS = {
@@ -95,11 +99,9 @@ def scan_publication(root: Path) -> list[Finding]:
             continue
         for idx, line in enumerate(lines, start=1):
             for code, pattern in SECRET_PATTERNS:
-                if _is_safe_placeholder(line):
-                    continue
                 if pattern.search(line):
                     findings.append(Finding("error", code, rel, idx, _excerpt(line)))
-            if not _is_safe_placeholder(line) and GCP_PROJECT_CONTEXT.search(line):
+            if GCP_PROJECT_CONTEXT.search(line):
                 findings.append(Finding("error", "gcp_project_context", rel, idx, _excerpt(line)))
     return findings
 
@@ -139,14 +141,3 @@ def _excerpt(line: str) -> str:
     if len(line) <= 140:
         return line
     return line[:137] + "..."
-
-
-def _is_safe_placeholder(line: str) -> bool:
-    placeholders = [
-        "YOUR_BUCKET",
-        "YOUR_PROJECT",
-        "YOUR_PROJECT_ID",
-        "PROJECT/REPOSITORY",
-        "REGION-docker.pkg.dev/PROJECT",
-    ]
-    return any(marker in line for marker in placeholders)

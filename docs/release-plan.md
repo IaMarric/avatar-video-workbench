@@ -6,6 +6,7 @@
 - Experiment package compiler.
 - Synthetic end-to-end smoke demo.
 - Dataset manifest, contact sheet, and storyboard preview generation.
+- Real Vertex LTX image-to-video CustomJob submission.
 - Publication safety scanner.
 - Vertex CustomJob preflight.
 - Vertex job template renderer.

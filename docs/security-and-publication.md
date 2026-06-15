@@ -23,7 +23,7 @@ Use OAuth or application default credentials locally:
 
 ```bash
 gcloud auth application-default login
-gcloud config set project YOUR_PROJECT_ID
+gcloud config set project "$GOOGLE_CLOUD_PROJECT"
 ```
 
 Do not commit:

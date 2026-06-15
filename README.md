@@ -4,7 +4,7 @@ Avatar Video Workbench is a small control plane for reproducible avatar media
 experiments:
 
 ```text
-character brief -> curated image dataset -> LoRA training -> still benchmarks -> image-to-video comparison
+character brief -> curated image dataset -> benchmark package -> Vertex LTX image-to-video job -> output audit
 ```
 
 The project is built for fictional or properly authorized characters. It does
@@ -20,6 +20,7 @@ projects, or provider-specific secrets.
 - Produces optional local review artifacts: a dataset contact sheet and a
   motion storyboard MP4 from a source still.
 - Renders Vertex AI CustomJob specs from safe templates.
+- Stages and submits a real LTX image-to-video CustomJob on Vertex AI.
 - Runs a synthetic smoke demo outside the repository to prove the pipeline.
 - Scans a folder before publication for credentials, absolute local paths,
   private cloud references, generated media, and model artifacts.
@@ -51,26 +52,32 @@ avw validate-dataset \
   --out runs/demo-avatar/reports/dataset-validation.json
 ```
 
-Render a Vertex CustomJob YAML from an example config:
+Run a local smoke test:
 
 ```bash
-avw render-vertex-job \
-  --config configs/ltx_i2v.example.yaml \
-  --template templates/vertex_custom_job.yaml \
-  --out runs/demo-avatar/jobs/ltx-i2v-custom-job.yaml
+avw smoke-demo --out-dir /tmp/avatar-video-workbench-smoke --force
+avw preflight-vertex --job-yaml /tmp/avatar-video-workbench-smoke/compiled/jobs/vertex-custom-job.yaml
 ```
+
+Submit a real LTX image-to-video job to Vertex AI:
+
+```bash
+avw submit-ltx-i2v \
+  --run-id "$AVW_RUN_ID" \
+  --gcs-root "$AVW_GCS_ROOT" \
+  --input-image "$AVW_INPUT_IMAGE" \
+  --prompt "$AVW_PROMPT" \
+  --region "$AVW_REGION" \
+  --container-image "$AVW_CONTAINER_IMAGE"
+```
+
+The command stages the runner, config, and input image to GCS, then creates a
+Vertex CustomJob. Outputs are written to the run prefix under GCS.
 
 Run the publication safety scan:
 
 ```bash
 avw scan-publication .
-```
-
-Run an end-to-end smoke test with synthetic temporary assets:
-
-```bash
-avw smoke-demo --out-dir /tmp/avatar-video-workbench-smoke --force
-avw preflight-vertex --job-yaml /tmp/avatar-video-workbench-smoke/compiled/jobs/vertex-custom-job.yaml
 ```
 
 Compile a real local experiment package:
@@ -79,15 +86,13 @@ Compile a real local experiment package:
 avw compile-run \
   --project-config runs/demo-avatar/avatar_project.yaml \
   --out-dir runs/demo-avatar/compiled \
-  --vertex-config configs/ltx_i2v.example.yaml \
-  --vertex-template templates/vertex_custom_job.yaml \
   --with-previews
 ```
 
 ## Repository Layout
 
 ```text
-configs/       Example experiment configs with placeholders only
+configs/       Local project config examples
 docs/          Pipeline, safety, and release notes
 src/           CLI and library code
 templates/     Vertex AI job templates
@@ -100,8 +105,8 @@ This repo is intentionally the experiment control plane, not a bundled model
 zoo. Large models, LoRA checkpoints, generated videos, source datasets, and
 provider credentials stay outside git.
 
-The local smoke demo writes generated media only under the output directory you
-choose. Do not commit that directory.
+Local smoke demos and Vertex runs write generated media only under the output
+directory or GCS prefix you choose. Do not commit those outputs.
 
 ## Suggested GitHub Topics
 

@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+from .cloud import LtxI2VSubmitOptions, submit_ltx_i2v
 from .config import WorkbenchError, write_json, write_yaml
 from .datasets import DatasetValidationOptions, validate_dataset
 from .experiments import CompileRunOptions, SmokeDemoOptions, compile_run, create_smoke_demo
@@ -53,6 +54,32 @@ def main(argv: list[str] | None = None) -> int:
     smoke_parser.add_argument("--out-dir", required=True)
     smoke_parser.add_argument("--force", action="store_true")
     smoke_parser.set_defaults(func=_cmd_smoke_demo)
+
+    ltx_parser = subparsers.add_parser("submit-ltx-i2v", help="Stage and submit a real LTX image-to-video Vertex job")
+    ltx_parser.add_argument("--run-id", required=True)
+    ltx_parser.add_argument("--gcs-root", required=True)
+    ltx_parser.add_argument("--input-image", required=True)
+    ltx_parser.add_argument("--prompt", required=True)
+    ltx_parser.add_argument("--negative-prompt", default="cartoon, CGI, distorted face, extra fingers, text, watermark")
+    ltx_parser.add_argument("--region", required=True)
+    ltx_parser.add_argument("--container-image", required=True)
+    ltx_parser.add_argument("--machine-type", default="a3-highgpu-1g")
+    ltx_parser.add_argument("--accelerator-type", default="NVIDIA_H100_80GB")
+    ltx_parser.add_argument("--accelerator-count", type=int, default=1)
+    ltx_parser.add_argument("--boot-disk-type", default="pd-ssd")
+    ltx_parser.add_argument("--boot-disk-size-gb", type=int, default=1000)
+    ltx_parser.add_argument("--staging-dir", default="runs/vertex-staging")
+    ltx_parser.add_argument("--model-id", default="dg845/LTX-2.3-Diffusers")
+    ltx_parser.add_argument("--width", type=int, default=256)
+    ltx_parser.add_argument("--height", type=int, default=256)
+    ltx_parser.add_argument("--num-frames", type=int, default=17)
+    ltx_parser.add_argument("--fps", type=int, default=8)
+    ltx_parser.add_argument("--num-inference-steps", type=int, default=4)
+    ltx_parser.add_argument("--guidance-scale", type=float, default=2.5)
+    ltx_parser.add_argument("--seed", type=int, default=1234)
+    ltx_parser.add_argument("--no-spot", action="store_true")
+    ltx_parser.add_argument("--dry-run", action="store_true")
+    ltx_parser.set_defaults(func=_cmd_submit_ltx_i2v)
 
     scan_parser = subparsers.add_parser("scan-publication", help="Scan a project before public release")
     scan_parser.add_argument("path")
@@ -152,6 +179,38 @@ def _cmd_preflight_vertex(args: argparse.Namespace) -> int:
 def _cmd_smoke_demo(args: argparse.Namespace) -> int:
     manifest = create_smoke_demo(SmokeDemoOptions(out_dir=Path(args.out_dir), force=args.force))
     print(json.dumps(manifest, indent=2, ensure_ascii=False))
+    return 0
+
+
+def _cmd_submit_ltx_i2v(args: argparse.Namespace) -> int:
+    result = submit_ltx_i2v(
+        LtxI2VSubmitOptions(
+            run_id=args.run_id,
+            gcs_root=args.gcs_root,
+            input_image=Path(args.input_image),
+            prompt=args.prompt,
+            negative_prompt=args.negative_prompt,
+            region=args.region,
+            container_image=args.container_image,
+            machine_type=args.machine_type,
+            accelerator_type=args.accelerator_type,
+            accelerator_count=args.accelerator_count,
+            boot_disk_type=args.boot_disk_type,
+            boot_disk_size_gb=args.boot_disk_size_gb,
+            staging_dir=Path(args.staging_dir),
+            model_id=args.model_id,
+            width=args.width,
+            height=args.height,
+            num_frames=args.num_frames,
+            fps=args.fps,
+            num_inference_steps=args.num_inference_steps,
+            guidance_scale=args.guidance_scale,
+            seed=args.seed,
+            spot=not args.no_spot,
+            submit=not args.dry_run,
+        )
+    )
+    print(json.dumps(result, indent=2, ensure_ascii=False))
     return 0
 
 

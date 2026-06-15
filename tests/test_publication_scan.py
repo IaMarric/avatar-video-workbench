@@ -14,17 +14,17 @@ def test_scan_rejects_service_account_marker(tmp_path: Path) -> None:
     assert any(item.code == "service_account_json" and item.severity == "error" for item in findings)
 
 
-def test_scan_allows_documented_placeholders(tmp_path: Path) -> None:
-    (tmp_path / "config.yaml").write_text("output: gs://YOUR_BUCKET/runs/demo\n", encoding="utf-8")
+def test_scan_rejects_cloud_storage_uris(tmp_path: Path) -> None:
+    uri = "gs://" + "private-bucket/runs/demo\n"
+    (tmp_path / "config.yaml").write_text(f"output: {uri}", encoding="utf-8")
 
     findings = scan_publication(tmp_path)
 
-    assert findings == []
+    assert any(item.code == "gcs_uri" and item.severity == "error" for item in findings)
 
 
 def test_scan_rejects_generated_media_files(tmp_path: Path) -> None:
-    (tmp_path / "outputs").mkdir()
-    (tmp_path / "outputs" / "sample.mp4").write_bytes(b"fake video")
+    (tmp_path / "sample.mp4").write_bytes(b"fake video")
 
     findings = scan_publication(tmp_path)
 

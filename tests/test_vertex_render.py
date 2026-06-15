@@ -18,12 +18,12 @@ vertex:
   accelerator_count: 1
   boot_disk_size_gb: 1000
 container:
-  image_uri: REGION-docker.pkg.dev/PROJECT/REPOSITORY/image:latest
+  image_uri: region-docker.pkg.dev/project-id/repository/image:latest
   command: python demo.py
 env:
-  CONFIG_URI: gs://YOUR_BUCKET/config.yaml
-  INPUT_IMAGE_URI: gs://YOUR_BUCKET/input.png
-  OUTPUT_URI: gs://YOUR_BUCKET/output
+  CONFIG_URI: https://storage.googleapis.com/bucket/config.yaml
+  INPUT_IMAGE_URI: https://storage.googleapis.com/bucket/input.png
+  OUTPUT_URI: https://storage.googleapis.com/bucket/output
   HF_HOME: /workspace/.cache/huggingface
 """,
         encoding="utf-8",
@@ -33,8 +33,8 @@ env:
     rendered = render_vertex_job(config, template)
 
     assert "name: demo-job" in rendered
-    assert "image: REGION-docker.pkg.dev/PROJECT/REPOSITORY/image:latest" in rendered
-    assert "config: gs://YOUR_BUCKET/config.yaml" in rendered
+    assert "image: region-docker.pkg.dev/project-id/repository/image:latest" in rendered
+    assert "config: https://storage.googleapis.com/bucket/config.yaml" in rendered
 
 
 def test_preflight_vertex_job_rejects_placeholders(tmp_path: Path) -> None:
