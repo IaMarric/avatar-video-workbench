@@ -44,5 +44,7 @@ python3 -m venv .venv
 
 ## Communication
 
-Open a GitHub issue before large changes. Small documentation fixes can go
-straight to a pull request.
+Use issues for scoped tasks, bugs, and documentation gaps. Use GitHub
+Discussions for workflow feedback, backend comparisons, and integration ideas.
+Open an issue before large changes. Small documentation fixes can go straight to
+a pull request.
