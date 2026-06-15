@@ -137,6 +137,8 @@ tests/         Unit tests
 
 ## Project Links
 
+- [Pipeline](docs/pipeline.md): Mermaid architecture diagram plus the
+  reproducible photo-to-LoRA-to-video flow.
 - [Public demo](docs/demo.md): synthetic smoke demo and safe sharing rules.
 - [Roadmap](docs/roadmap.md): technical roadmap for reproducibility, safety,
   and backend support.
