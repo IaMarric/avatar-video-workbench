@@ -135,6 +135,11 @@ templates/     Vertex AI job templates
 tests/         Unit tests
 ```
 
+## Project Links
+
+- [Public demo](docs/demo.md): synthetic smoke demo and safe sharing rules.
+- [Contributing](CONTRIBUTING.md): setup, quality checks, and safety rules.
+
 ## Scope
 
 This repo is intentionally the experiment control plane, not a bundled model
@@ -146,6 +151,7 @@ directory or GCS prefix you choose. Do not commit those outputs.
 
 See [docs/pirate-character-flow.md](docs/pirate-character-flow.md) for the
 complete photo-to-LoRA-to-video route.
+See [docs/demo.md](docs/demo.md) for a public-safe synthetic demo.
 
 ## Suggested GitHub Topics
 

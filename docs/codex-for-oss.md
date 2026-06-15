@@ -30,14 +30,6 @@ comparison notes into a reproducible open source workflow.
 - `avw scan-publication` blocks credentials, private paths, generated media,
   and checkpoint files before publication.
 
-## Near-Term Roadmap
-
-- Add GitHub Actions for tests and publication scanning.
-- Add a run registry and benchmark manifest.
-- Add cloud cost and runtime report parsing.
-- Add adapters for LTX, Wan, Hunyuan, and ComfyUI workflow metadata.
-- Publish a minimal demo that uses synthetic temporary assets only.
-
 ## Public Data Policy
 
 The repository intentionally ships without generated images, generated videos,
