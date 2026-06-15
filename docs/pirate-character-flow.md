@@ -77,6 +77,8 @@ uploads checkpoints to the run output prefix.
 For `hf://` directories, repeated `include` query parameters limit which repo
 paths are downloaded. When a Hugging Face asset is gated, store the token in
 Google Secret Manager and pass the secret name with `--hf-token-secret`.
+For repeated Vertex runs, see [model-assets.md](model-assets.md) for the
+pre-staged checkpoint and text encoder layout.
 
 ## 3. Generate Video With the LoRA
 

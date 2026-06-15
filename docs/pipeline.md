@@ -90,6 +90,9 @@ inspection but must stay outside git.
 
 Train an LTX LoRA from the generated image dataset. Keep output in cloud
 storage or local ignored directories. Store only sanitized configs and reports.
+Pre-stage model assets using the private layout in
+[model-assets.md](model-assets.md) when repeated jobs would otherwise download
+the same checkpoint and text encoder each time.
 
 Recommended first target:
 

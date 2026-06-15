@@ -159,6 +159,8 @@ tests/         Unit tests
   and backend support.
 - [Backend metadata](docs/backend-metadata.md): public-safe comparison reports
   for LTX and ComfyUI-style workflows.
+- [Pre-staged model assets](docs/model-assets.md): private checkpoint and text
+  encoder layouts for repeatable Vertex runs.
 - [Contributing](CONTRIBUTING.md): setup, quality checks, and safety rules.
 
 ## Scope
