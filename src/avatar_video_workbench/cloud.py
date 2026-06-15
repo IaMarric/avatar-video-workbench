@@ -64,6 +64,7 @@ class LtxLoraTrainSubmitOptions:
     trainer_repo: str = "https://github.com/Lightricks/LTX-2.git"
     trainer_ref: str = "main"
     validation_prompt: str | None = None
+    hf_token_secret: str | None = None
     spot: bool = True
     submit: bool = True
 
@@ -183,8 +184,8 @@ def submit_ltx_lora_train(options: LtxLoraTrainSubmitOptions) -> dict:
     _require_command("gcloud")
     _require_command("gsutil")
     _validate_gcs_uri(options.gcs_root)
-    _validate_gcs_uri(options.model_uri)
-    _validate_gcs_uri(options.text_encoder_uri)
+    _validate_asset_uri(options.model_uri)
+    _validate_asset_uri(options.text_encoder_uri)
     if not options.dataset_dir.expanduser().is_dir():
         raise WorkbenchError(f"dataset dir not found: {options.dataset_dir}")
     if not (options.dataset_dir.expanduser() / "ltx_trainer" / "dataset.json").is_file() and not (
@@ -341,9 +342,17 @@ def _build_ltx_lora_train_job_yaml(
         {"name": "NVIDIA_VISIBLE_DEVICES", "value": "all"},
         {"name": "NVIDIA_DRIVER_CAPABILITIES", "value": "compute,utility"},
         {"name": "CUDA_VISIBLE_DEVICES", "value": "0"},
+        {
+            "name": "LD_LIBRARY_PATH",
+            "value": "/usr/local/nvidia/lib64:/usr/local/nvidia/lib:/usr/local/cuda/lib64:/usr/local/cuda/targets/x86_64-linux/lib",
+        },
     ]
     if options.validation_prompt:
         env.append({"name": "AVW_LTX_VALIDATION_PROMPT", "value": options.validation_prompt})
+    if options.hf_token_secret:
+        env.append({"name": "AVW_HF_TOKEN_SECRET", "value": options.hf_token_secret})
+        if not options.hf_token_secret.startswith("projects/"):
+            env.append({"name": "AVW_SECRET_PROJECT", "value": _active_gcloud_project()})
     return {
         "scheduling": {"strategy": "SPOT" if options.spot else "STANDARD"},
         "workerPoolSpecs": [
@@ -400,6 +409,13 @@ def _require_command(name: str) -> None:
         raise WorkbenchError(f"Required command not found: {name}")
 
 
+def _active_gcloud_project() -> str:
+    project = _run(["gcloud", "config", "get-value", "project"], capture=True).strip()
+    if not project:
+        raise WorkbenchError("gcloud has no active project; use a full Secret Manager resource for --hf-token-secret")
+    return project
+
+
 def _require_file(path: Path, label: str) -> None:
     if not path.expanduser().is_file():
         raise WorkbenchError(f"{label} not found: {path}")
@@ -409,6 +425,15 @@ def _validate_gcs_uri(uri: str) -> None:
     parsed = urlparse(uri)
     if parsed.scheme != "gs" or not parsed.netloc:
         raise WorkbenchError(f"Expected GCS URI, got: {uri}")
+
+
+def _validate_asset_uri(uri: str) -> None:
+    parsed = urlparse(uri)
+    if parsed.scheme == "gs" and parsed.netloc:
+        return
+    if parsed.scheme == "hf" and parsed.netloc:
+        return
+    raise WorkbenchError(f"Expected gs:// or hf:// asset URI, got: {uri}")
 
 
 def _slug(value: str) -> str:

@@ -127,6 +127,10 @@ def main(argv: list[str] | None = None) -> int:
     lora_train_parser.add_argument("--trainer-repo", default="https://github.com/Lightricks/LTX-2.git")
     lora_train_parser.add_argument("--trainer-ref", default="main")
     lora_train_parser.add_argument("--validation-prompt")
+    lora_train_parser.add_argument(
+        "--hf-token-secret",
+        help="Secret Manager secret name or resource containing an HF token for gated Hugging Face assets",
+    )
     lora_train_parser.add_argument("--no-spot", action="store_true")
     lora_train_parser.add_argument("--dry-run", action="store_true")
     lora_train_parser.set_defaults(func=_cmd_submit_ltx_lora_train)
@@ -311,6 +315,7 @@ def _cmd_submit_ltx_lora_train(args: argparse.Namespace) -> int:
             trainer_repo=args.trainer_repo,
             trainer_ref=args.trainer_ref,
             validation_prompt=args.validation_prompt,
+            hf_token_secret=args.hf_token_secret,
             spot=not args.no_spot,
             submit=not args.dry_run,
         )

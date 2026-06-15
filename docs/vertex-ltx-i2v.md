@@ -15,7 +15,9 @@ available in the container, then uploads outputs back to GCS.
 
 - `gcloud` authenticated to a project with Vertex AI enabled.
 - `gsutil` access to the target GCS prefix.
-- A GPU-capable Vertex container image with CUDA and Python.
+- A GPU-capable Vertex container image with CUDA and Python. The runner installs
+  missing Python packages at startup, including Diffusers, Transformers, and
+  PEFT for LoRA loading.
 - Vertex Custom Training GPU quota in the target region.
 - A source image that you have rights to use.
 

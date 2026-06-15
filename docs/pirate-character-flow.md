@@ -32,7 +32,8 @@ Outputs:
 - `source/source.*`: normalized private source image copy.
 - `dataset/images/*.png`: generated training variants.
 - `dataset/images/*.txt`: paired captions containing the trigger token.
-- `ltx_trainer/dataset.json`: dataset metadata for the official LTX trainer.
+- `dataset.json`: dataset metadata for the official LTX trainer.
+- `ltx_trainer/dataset.json`: legacy copy for older manual workflows.
 - `reports/nano-banana-requests.jsonl`: exact prompts used for generation.
 - `reports/dataset-contact-sheet.png`: local review sheet.
 - `manifest.json`: run manifest.
@@ -50,7 +51,8 @@ The official LTX trainer requires local model assets inside the training job:
 - a Gemma text encoder directory;
 - Linux/CUDA with enough VRAM. H100-class hardware is the recommended route.
 
-Stage those model assets in a private GCS prefix, then submit training:
+Use the public Hugging Face model assets directly, or stage equivalent files in
+a private GCS prefix:
 
 ```bash
 avw submit-ltx-lora-train \
@@ -58,8 +60,8 @@ avw submit-ltx-lora-train \
   --gcs-root "$PRIVATE_GCS_RUN_PREFIX" \
   --dataset-dir runs/pirate-avatar \
   --trigger "avwpirate person" \
-  --model-uri "$LTX_23_CHECKPOINT_GCS_URI" \
-  --text-encoder-uri "$GEMMA_TEXT_ENCODER_GCS_URI" \
+  --model-uri "hf://Lightricks/LTX-2/ltx-2-19b-dev.safetensors" \
+  --text-encoder-uri "hf://Lightricks/LTX-2?include=text_encoder/**&include=tokenizer/**" \
   --region "$VERTEX_REGION" \
   --container-image "$GPU_CONTAINER_IMAGE" \
   --machine-type a3-highgpu-1g \
@@ -68,8 +70,13 @@ avw submit-ltx-lora-train \
 ```
 
 The job clones the official LTX-2 trainer, preprocesses
-`ltx_trainer/dataset.json` with a `512x512x1` image bucket, trains a LoRA, and
+`dataset.json` with a `512x512x1` image bucket, trains a LoRA, and
 uploads checkpoints to the run output prefix.
+
+`--model-uri` and `--text-encoder-uri` accept either `hf://...` or `gs://...`.
+For `hf://` directories, repeated `include` query parameters limit which repo
+paths are downloaded. When a Hugging Face asset is gated, store the token in
+Google Secret Manager and pass the secret name with `--hf-token-secret`.
 
 ## 3. Generate Video With the LoRA
 

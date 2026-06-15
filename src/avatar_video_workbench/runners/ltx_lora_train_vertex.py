@@ -6,7 +6,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 
 def main() -> int:
@@ -18,6 +18,7 @@ def main() -> int:
     from google.cloud import storage
 
     client = storage.Client()
+    _load_hf_token_from_secret()
     dataset_dir = workspace / "dataset"
     output_dir = workspace / "outputs" / "ltx_lora"
     repo_dir = workspace / "LTX-2"
@@ -26,8 +27,8 @@ def main() -> int:
     config_path = workspace / "configs" / "ltx_lora_training.yaml"
 
     _download_directory(client, _env("AVW_LTX_DATASET_URI"), dataset_dir)
-    _download_file(client, _env("AVW_LTX_MODEL_URI"), model_path)
-    _download_directory(client, _env("AVW_LTX_TEXT_ENCODER_URI"), text_encoder_dir)
+    _materialize_file_asset(client, _env("AVW_LTX_MODEL_URI"), model_path)
+    _materialize_directory_asset(client, _env("AVW_LTX_TEXT_ENCODER_URI"), text_encoder_dir)
     _clone_ltx_repo(repo_dir)
     dataset_json = _find_dataset_json(dataset_dir)
     precomputed_dir = dataset_json.parent / ".precomputed"
@@ -44,7 +45,12 @@ def main() -> int:
 
 def _ensure_runtime_dependencies() -> None:
     missing = []
-    for module_name, package_name in {"google.cloud.storage": "google-cloud-storage", "yaml": "PyYAML"}.items():
+    for module_name, package_name in {
+        "google.cloud.secretmanager": "google-cloud-secret-manager",
+        "google.cloud.storage": "google-cloud-storage",
+        "huggingface_hub": "huggingface-hub[hf-xet]",
+        "yaml": "PyYAML",
+    }.items():
         try:
             __import__(module_name)
         except Exception:
@@ -62,13 +68,42 @@ def _clone_ltx_repo(repo_dir: Path) -> None:
 
 
 def _find_dataset_json(dataset_dir: Path) -> Path:
-    dataset_json = dataset_dir / "ltx_trainer" / "dataset.json"
-    if dataset_json.is_file():
-        return dataset_json
     dataset_json = dataset_dir / "dataset.json"
     if dataset_json.is_file():
         return dataset_json
+    dataset_json = dataset_dir / "ltx_trainer" / "dataset.json"
+    if dataset_json.is_file():
+        return _write_normalized_dataset_json(dataset_json, dataset_dir)
     raise RuntimeError(f"LTX trainer dataset.json not found under {dataset_dir}")
+
+
+def _write_normalized_dataset_json(dataset_json: Path, dataset_dir: Path) -> Path:
+    rows = json.loads(dataset_json.read_text(encoding="utf-8"))
+    if not isinstance(rows, list):
+        raise RuntimeError(f"LTX trainer dataset JSON must be a list: {dataset_json}")
+
+    normalized_rows = []
+    root = dataset_dir.resolve()
+    media_columns = ("media_path", "reference_path", "reference_video_path")
+    for row in rows:
+        if not isinstance(row, dict):
+            raise RuntimeError(f"LTX trainer dataset row must be an object: {dataset_json}")
+        normalized = dict(row)
+        for column in media_columns:
+            value = normalized.get(column)
+            if not isinstance(value, str) or not value:
+                continue
+            source_path = (dataset_json.parent / value).resolve()
+            try:
+                normalized[column] = source_path.relative_to(root).as_posix()
+            except ValueError as exc:
+                raise RuntimeError(f"Dataset media path escapes dataset root: {value}") from exc
+        normalized_rows.append(normalized)
+
+    normalized_path = dataset_dir / "dataset.json"
+    normalized_path.write_text(json.dumps(normalized_rows, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(f"Normalized LTX dataset JSON {dataset_json} to {normalized_path}", flush=True)
+    return normalized_path
 
 
 def _run_trainer(
@@ -213,6 +248,95 @@ def _download_directory(client, uri: str, destination: Path) -> None:
     if count == 0:
         raise RuntimeError(f"No files found at {uri}")
     print(f"Downloaded {count} files from {uri} to {destination}", flush=True)
+
+
+def _materialize_file_asset(client, uri: str, destination: Path) -> None:
+    if uri.startswith("gs://"):
+        _download_file(client, uri, destination)
+        return
+    repo_id, filename = _parse_hf_uri(uri)
+    if not filename:
+        raise RuntimeError(f"HF file URI must include a filename: {uri}")
+    from huggingface_hub import hf_hub_download
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    downloaded = Path(hf_hub_download(repo_id=repo_id, filename=filename, local_dir=destination.parent))
+    if downloaded.resolve() != destination.resolve():
+        shutil.copy2(downloaded, destination)
+    print(f"Downloaded {uri} to {destination}", flush=True)
+
+
+def _materialize_directory_asset(client, uri: str, destination: Path) -> None:
+    if uri.startswith("gs://"):
+        _download_directory(client, uri, destination)
+        return
+    repo_id, path_prefix = _parse_hf_uri(uri)
+    include_patterns = _hf_include_patterns(uri, path_prefix)
+    from huggingface_hub import snapshot_download
+
+    destination.mkdir(parents=True, exist_ok=True)
+    snapshot_download(repo_id=repo_id, local_dir=destination, allow_patterns=include_patterns)
+    if path_prefix and "?" not in uri:
+        nested = destination / path_prefix
+        if nested.is_dir():
+            for path in sorted(nested.rglob("*")):
+                if not path.is_file():
+                    continue
+                rel = path.relative_to(nested)
+                out = destination / rel
+                out.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(path, out)
+    print(f"Downloaded {uri} to {destination}", flush=True)
+
+
+def _load_hf_token_from_secret() -> None:
+    if os.environ.get("HF_TOKEN"):
+        return
+    secret = os.environ.get("AVW_HF_TOKEN_SECRET")
+    if not secret:
+        return
+
+    from google.cloud import secretmanager
+
+    name = secret
+    if name.startswith("projects/"):
+        if "/versions/" not in name:
+            name = name.rstrip("/") + "/versions/latest"
+    else:
+        secret_project = os.environ.get("AVW_SECRET_PROJECT")
+        if not secret_project:
+            raise RuntimeError("AVW_HF_TOKEN_SECRET was set as a short name, but AVW_SECRET_PROJECT was not provided")
+        name = f"projects/{secret_project}/secrets/{secret}/versions/latest"
+
+    response = secretmanager.SecretManagerServiceClient().access_secret_version(request={"name": name})
+    token = response.payload.data.decode("utf-8").strip()
+    if not token:
+        raise RuntimeError(f"Secret {secret} did not contain an HF token")
+    os.environ["HF_TOKEN"] = token
+    print(f"Loaded HF token from Secret Manager secret {secret}", flush=True)
+
+
+def _parse_hf_uri(uri: str) -> tuple[str, str]:
+    parsed = urlparse(uri)
+    if parsed.scheme != "hf" or not parsed.netloc:
+        raise ValueError(f"Expected hf:// URI, got {uri}")
+    parts = (parsed.netloc + parsed.path).strip("/").split("/")
+    if len(parts) < 2:
+        raise ValueError(f"HF URI must include owner/repo: {uri}")
+    repo_id = "/".join(parts[:2])
+    path = "/".join(parts[2:])
+    return repo_id, path
+
+
+def _hf_include_patterns(uri: str, path_prefix: str) -> list[str] | None:
+    parsed = urlparse(uri)
+    query = parse_qs(parsed.query)
+    requested = query.get("include", []) + query.get("allow", [])
+    if requested:
+        return requested
+    if path_prefix:
+        return [path_prefix.rstrip("/") + "/**"]
+    return None
 
 
 def _upload_directory(client, source: Path, destination_uri: str) -> int:

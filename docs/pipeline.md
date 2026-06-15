@@ -33,7 +33,8 @@ avw generate-character-dataset \
 
 With Google credentials configured, this uses Nano Banana 2
 (`gemini-3.1-flash-image`) to create ten family-friendly pirate variants. It
-also writes `ltx_trainer/dataset.json` for the official LTX trainer.
+also writes `dataset.json` for the official LTX trainer, plus a legacy
+`ltx_trainer/dataset.json` copy for older manual workflows.
 
 Use `--plan-only` when you only want prompts and metadata.
 

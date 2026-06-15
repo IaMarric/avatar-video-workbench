@@ -85,11 +85,14 @@ avw submit-ltx-lora-train \
   --gcs-root "$PRIVATE_GCS_RUN_PREFIX" \
   --dataset-dir runs/pirate-avatar \
   --trigger "avwpirate person" \
-  --model-uri "$LTX_23_CHECKPOINT_GCS_URI" \
-  --text-encoder-uri "$GEMMA_TEXT_ENCODER_GCS_URI" \
+  --model-uri "hf://Lightricks/LTX-2/ltx-2-19b-dev.safetensors" \
+  --text-encoder-uri "hf://Lightricks/LTX-2?include=text_encoder/**&include=tokenizer/**" \
   --region "$AVW_REGION" \
   --container-image "$AVW_CONTAINER_IMAGE"
 ```
+
+For gated or rate-limited Hugging Face assets, store the token in Secret
+Manager and add `--hf-token-secret "$HF_TOKEN_SECRET_NAME"`.
 
 Submit a real LTX image-to-video job to Vertex AI:
 

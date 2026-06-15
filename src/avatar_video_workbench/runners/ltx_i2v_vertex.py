@@ -49,17 +49,7 @@ def main() -> int:
 
 
 def _ensure_runtime_dependencies() -> None:
-    required_imports = {
-        "google.cloud.storage": "google-cloud-storage",
-        "yaml": "PyYAML",
-        "PIL": "Pillow",
-        "torch": "torch",
-        "transformers": "transformers",
-        "accelerate": "accelerate",
-        "sentencepiece": "sentencepiece",
-        "google.protobuf": "protobuf",
-        "av": "av",
-    }
+    required_imports = _runtime_dependencies()
     missing = []
     for module_name, package_name in required_imports.items():
         try:
@@ -77,6 +67,21 @@ def _ensure_runtime_dependencies() -> None:
         command = [sys.executable, "-m", "pip", "install", "--upgrade", *sorted(set(missing))]
         print("Installing missing runtime packages: " + " ".join(command), flush=True)
         subprocess.run(command, check=True)
+
+
+def _runtime_dependencies() -> dict[str, str]:
+    return {
+        "google.cloud.storage": "google-cloud-storage",
+        "yaml": "PyYAML",
+        "PIL": "Pillow",
+        "torch": "torch",
+        "transformers": "transformers",
+        "accelerate": "accelerate",
+        "peft": "peft",
+        "sentencepiece": "sentencepiece",
+        "google.protobuf": "protobuf",
+        "av": "av",
+    }
 
 
 def _run_ltx_i2v(config: dict, input_image_path: Path, output_dir: Path) -> dict:

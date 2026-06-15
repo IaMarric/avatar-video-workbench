@@ -36,9 +36,11 @@ def test_create_character_dataset_writes_ltx_training_inputs(tmp_path: Path) -> 
     assert manifest["variant_count"] == 3
     assert (run_dir / "dataset" / "images" / "001.png").is_file()
     assert "avwpirate person" in (run_dir / "dataset" / "images" / "001.txt").read_text(encoding="utf-8")
-    trainer_rows = json.loads((run_dir / "ltx_trainer" / "dataset.json").read_text(encoding="utf-8"))
+    trainer_rows = json.loads((run_dir / "dataset.json").read_text(encoding="utf-8"))
     assert len(trainer_rows) == 3
-    assert trainer_rows[0]["media_path"] == "../dataset/images/001.png"
+    assert trainer_rows[0]["media_path"] == "dataset/images/001.png"
+    legacy_rows = json.loads((run_dir / "ltx_trainer" / "dataset.json").read_text(encoding="utf-8"))
+    assert legacy_rows[0]["media_path"] == "../dataset/images/001.png"
     config = yaml.safe_load((run_dir / "configs" / "ltx_lora_training.yaml").read_text(encoding="utf-8"))
     assert config["model"]["training_mode"] == "lora"
     assert config["training_strategy"]["first_frame_conditioning_p"] == 0.75
@@ -59,4 +61,3 @@ def test_build_ltx_lora_training_config_uses_concrete_paths() -> None:
     assert config["model"]["text_encoder_path"] == "/models/gemma"
     assert config["optimization"]["steps"] == 800
     assert config["validation"]["prompts"] == ["avwpirate person stands on a ship deck"]
-

@@ -109,18 +109,27 @@ def create_character_dataset(
             }
         )
 
-    dataset_json_path = trainer_dir / "dataset.json"
+    dataset_json_path = out_dir / "dataset.json"
+    legacy_dataset_json_path = trainer_dir / "dataset.json"
     trainer_rows = []
+    legacy_trainer_rows = []
     for item in generated:
         if not item["image"]:
             continue
         trainer_rows.append(
+            {
+                "media_path": item["image"],
+                "caption": Path(out_dir / item["caption"]).read_text(encoding="utf-8").strip(),
+            }
+        )
+        legacy_trainer_rows.append(
             {
                 "media_path": "../" + item["image"],
                 "caption": Path(out_dir / item["caption"]).read_text(encoding="utf-8").strip(),
             }
         )
     write_json(dataset_json_path, trainer_rows)
+    write_json(legacy_dataset_json_path, legacy_trainer_rows)
 
     contact_sheet_path = None
     if trainer_rows:
@@ -153,12 +162,13 @@ def create_character_dataset(
         "dataset_dir": dataset_dir.relative_to(out_dir).as_posix(),
         "nano_banana_requests": requests_path.relative_to(out_dir).as_posix(),
         "ltx_trainer_dataset": dataset_json_path.relative_to(out_dir).as_posix(),
+        "legacy_ltx_trainer_dataset": legacy_dataset_json_path.relative_to(out_dir).as_posix(),
         "ltx_training_config": training_config_path.relative_to(out_dir).as_posix() if training_config_path else None,
         "contact_sheet": contact_sheet_path.relative_to(out_dir).as_posix() if contact_sheet_path else None,
         "generated": generated,
         "next_steps": [
             "Review generated variants and remove weak images before training.",
-            "Run LTX trainer preprocessing on ltx_trainer/dataset.json with the same trigger.",
+            "Run LTX trainer preprocessing on dataset.json with the same trigger.",
             "Train an LTX LoRA using the generated config or submit-ltx-lora-train.",
             "Run submit-ltx-i2v with the trained LoRA URI to generate video.",
         ],
