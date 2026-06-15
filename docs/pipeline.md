@@ -2,6 +2,32 @@
 
 Avatar Video Workbench treats the repo as a reproducible control plane.
 
+## Architecture Diagram
+
+```mermaid
+flowchart LR
+  source["Authorized source photo"] --> generate["avw generate-character-dataset"]
+  generate --> variants["Public-safe themed variants"]
+  generate --> dataset["Captioned LTX LoRA dataset"]
+  dataset --> validate["avw validate-dataset"]
+  validate --> compile["avw compile-run"]
+  compile --> package["Manifest, prompts, and job specs"]
+  dataset --> train["avw submit-ltx-lora-train"]
+  train --> lora["Private LoRA checkpoints"]
+  variants --> still["Selected hero still"]
+  still --> i2v["avw submit-ltx-i2v"]
+  lora --> i2v
+  i2v --> video["LTX 2.3 video outputs"]
+  package --> scan["avw scan-publication"]
+  video --> private["Private run directory or GCS prefix"]
+  lora --> private
+  source --> private
+```
+
+The public documentation tracks only commands, manifests, prompts, and safe
+templates. Source photos, generated variants, LoRA checkpoints, and rendered
+videos stay in a private run directory or GCS prefix outside git.
+
 ## 1. Character Definition
 
 Start with a short character brief:
