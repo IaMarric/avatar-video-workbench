@@ -16,7 +16,9 @@ projects, or provider-specific secrets.
 - Validates LoRA image datasets with paired captions.
 - Creates a neutral project layout for avatar experiments.
 - Compiles a complete experiment package with validation report, benchmark
-  prompts, manifest, and optional Vertex AI job YAML.
+  prompts, dataset manifest, run manifest, and optional Vertex AI job YAML.
+- Produces optional local review artifacts: a dataset contact sheet and a
+  motion storyboard MP4 from a source still.
 - Renders Vertex AI CustomJob specs from safe templates.
 - Runs a synthetic smoke demo outside the repository to prove the pipeline.
 - Scans a folder before publication for credentials, absolute local paths,
@@ -78,7 +80,8 @@ avw compile-run \
   --project-config runs/demo-avatar/avatar_project.yaml \
   --out-dir runs/demo-avatar/compiled \
   --vertex-config configs/ltx_i2v.example.yaml \
-  --vertex-template templates/vertex_custom_job.yaml
+  --vertex-template templates/vertex_custom_job.yaml \
+  --with-previews
 ```
 
 ## Repository Layout
@@ -96,6 +99,9 @@ tests/         Unit tests
 This repo is intentionally the experiment control plane, not a bundled model
 zoo. Large models, LoRA checkpoints, generated videos, source datasets, and
 provider credentials stay outside git.
+
+The local smoke demo writes generated media only under the output directory you
+choose. Do not commit that directory.
 
 ## Suggested GitHub Topics
 

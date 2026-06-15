@@ -8,8 +8,9 @@ from typing import Any
 
 from PIL import Image, ImageDraw
 
+from .artifacts import build_dataset_manifest, render_contact_sheet, render_motion_storyboard, write_jsonl
 from .config import WorkbenchError, load_mapping, require_keys, write_json, write_yaml
-from .datasets import DatasetValidationOptions, validate_dataset
+from .datasets import DatasetValidationOptions, image_paths, validate_dataset
 from .vertex import render_vertex_job
 
 
@@ -22,6 +23,7 @@ class CompileRunOptions:
     out_dir: Path
     vertex_config: Path | None = None
     vertex_template: Path | None = None
+    with_previews: bool = False
 
 
 @dataclass(frozen=True)
@@ -48,6 +50,7 @@ def compile_run(options: CompileRunOptions) -> dict[str, Any]:
     reports_dir = out_dir / "reports"
     prompts_dir = out_dir / "prompts"
     jobs_dir = out_dir / "jobs"
+    previews_dir = out_dir / "previews"
     reports_dir.mkdir(parents=True, exist_ok=True)
     prompts_dir.mkdir(parents=True, exist_ok=True)
     jobs_dir.mkdir(parents=True, exist_ok=True)
@@ -65,9 +68,21 @@ def compile_run(options: CompileRunOptions) -> dict[str, Any]:
     if not validation["ok"]:
         raise WorkbenchError(f"Dataset validation failed; see {validation_path}")
 
+    dataset_manifest = build_dataset_manifest(images_dir, trigger=trigger)
+    dataset_manifest_path = reports_dir / "dataset-manifest.jsonl"
+    write_jsonl(dataset_manifest_path, dataset_manifest)
+
     prompt_matrix = build_prompt_matrix(project, data.get("benchmarks") or {})
     prompt_matrix_path = prompts_dir / "benchmark-prompts.yaml"
     write_yaml(prompt_matrix_path, {"prompts": prompt_matrix})
+
+    contact_sheet_path: Path | None = None
+    storyboard_video_path: Path | None = None
+    if options.with_previews:
+        previews_dir.mkdir(parents=True, exist_ok=True)
+        contact_sheet_path = render_contact_sheet(images_dir, previews_dir / "dataset-contact-sheet.png")
+        first_image = image_paths(images_dir)[0]
+        storyboard_video_path = render_motion_storyboard(first_image, previews_dir / "motion-storyboard.mp4")
 
     vertex_job_path: Path | None = None
     if options.vertex_config or options.vertex_template:
@@ -94,10 +109,13 @@ def compile_run(options: CompileRunOptions) -> dict[str, Any]:
             "caption_count": validation["caption_count"],
             "unique_image_hashes": validation["unique_image_hashes"],
             "validation_report": _relative_to(validation_path, out_dir),
+            "training_manifest": _relative_to(dataset_manifest_path, out_dir),
         },
         "artifacts": {
             "prompt_matrix": _relative_to(prompt_matrix_path, out_dir),
             "vertex_job": _relative_to(vertex_job_path, out_dir) if vertex_job_path else None,
+            "contact_sheet": _relative_to(contact_sheet_path, out_dir),
+            "storyboard_video": _relative_to(storyboard_video_path, out_dir),
         },
         "next_steps": [
             "Review reports/dataset-validation.json.",
@@ -244,6 +262,7 @@ jobSpec:
             out_dir=out_dir / "compiled",
             vertex_config=vertex_config,
             vertex_template=vertex_template,
+            with_previews=True,
         )
     )
 

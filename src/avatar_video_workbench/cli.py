@@ -41,6 +41,7 @@ def main(argv: list[str] | None = None) -> int:
     compile_parser.add_argument("--out-dir", required=True)
     compile_parser.add_argument("--vertex-config")
     compile_parser.add_argument("--vertex-template")
+    compile_parser.add_argument("--with-previews", action="store_true")
     compile_parser.set_defaults(func=_cmd_compile_run)
 
     preflight_parser = subparsers.add_parser("preflight-vertex", help="Validate a rendered Vertex CustomJob YAML")
@@ -133,6 +134,7 @@ def _cmd_compile_run(args: argparse.Namespace) -> int:
             out_dir=Path(args.out_dir),
             vertex_config=Path(args.vertex_config) if args.vertex_config else None,
             vertex_template=Path(args.vertex_template) if args.vertex_template else None,
+            with_previews=args.with_previews,
         )
     )
     print(json.dumps(manifest, indent=2, ensure_ascii=False))

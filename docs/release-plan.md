@@ -5,6 +5,7 @@
 - Dataset validation CLI.
 - Experiment package compiler.
 - Synthetic end-to-end smoke demo.
+- Dataset manifest, contact sheet, and storyboard preview generation.
 - Publication safety scanner.
 - Vertex CustomJob preflight.
 - Vertex job template renderer.

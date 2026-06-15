@@ -52,8 +52,17 @@ This writes:
 
 - `compiled/manifest.json`;
 - `compiled/reports/dataset-validation.json`;
+- `compiled/reports/dataset-manifest.jsonl`;
 - `compiled/prompts/benchmark-prompts.yaml`;
 - `compiled/jobs/vertex-custom-job.yaml` when a Vertex config/template is provided.
+
+Add `--with-previews` to also render:
+
+- `compiled/previews/dataset-contact-sheet.png`;
+- `compiled/previews/motion-storyboard.mp4`.
+
+These previews are generated review artifacts. They are useful for local
+inspection but must stay outside git.
 
 ## 3. Image LoRA
 

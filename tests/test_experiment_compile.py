@@ -40,6 +40,9 @@ dataset:
 
     assert manifest["dataset"]["image_count"] == 2
     assert (tmp_path / "compiled" / "reports" / "dataset-validation.json").is_file()
+    manifest_jsonl = tmp_path / "compiled" / "reports" / "dataset-manifest.jsonl"
+    assert manifest_jsonl.is_file()
+    assert len(manifest_jsonl.read_text(encoding="utf-8").splitlines()) == 2
     prompt_matrix = yaml.safe_load((tmp_path / "compiled" / "prompts" / "benchmark-prompts.yaml").read_text())
     assert len(prompt_matrix["prompts"]) >= 5
     assert all("demoavatar person" in item["prompt"] for item in prompt_matrix["prompts"])
@@ -53,3 +56,6 @@ def test_smoke_demo_runs_end_to_end(tmp_path: Path) -> None:
     assert (compiled / "manifest.json").is_file()
     assert (compiled / "prompts" / "benchmark-prompts.yaml").is_file()
     assert (compiled / "jobs" / "vertex-custom-job.yaml").is_file()
+    assert (compiled / "reports" / "dataset-manifest.jsonl").is_file()
+    assert (compiled / "previews" / "dataset-contact-sheet.png").stat().st_size > 0
+    assert (compiled / "previews" / "motion-storyboard.mp4").stat().st_size > 0

@@ -20,8 +20,9 @@ comparison notes into a reproducible open source workflow.
 - `avw init` creates a clean experiment scaffold.
 - `avw validate-dataset` validates paired image and caption datasets.
 - `avw compile-run` writes a validated experiment manifest, reports, and
-  benchmark prompt matrix.
-- `avw smoke-demo` proves the pipeline locally with synthetic temporary assets.
+  benchmark prompt matrix, with optional review previews.
+- `avw smoke-demo` proves the pipeline locally with synthetic temporary assets,
+  a contact sheet, and a motion storyboard video.
 - `avw render-vertex-job` renders cloud job specs from placeholder configs.
 - `avw preflight-vertex` validates rendered Vertex CustomJob YAML before launch.
 - `avw scan-publication` blocks credentials, private paths, generated media,
