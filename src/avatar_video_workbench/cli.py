@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+from .backend_metadata import export_backend_metadata, write_backend_metadata
 from .character_flow import CharacterDatasetOptions, create_character_dataset
 from .cloud import LtxI2VSubmitOptions, LtxLoraTrainSubmitOptions, submit_ltx_i2v, submit_ltx_lora_train
 from .config import WorkbenchError, write_json, write_yaml
@@ -50,6 +51,14 @@ def main(argv: list[str] | None = None) -> int:
     preflight_parser.add_argument("--job-yaml", required=True)
     preflight_parser.add_argument("--json-out")
     preflight_parser.set_defaults(func=_cmd_preflight_vertex)
+
+    metadata_parser = subparsers.add_parser(
+        "export-backend-metadata",
+        help="Export public-safe backend metadata from an AVW run config or manifest",
+    )
+    metadata_parser.add_argument("--input", required=True, help="LTX I2V config, runtime manifest, or submission manifest")
+    metadata_parser.add_argument("--out", help="Optional JSON output path")
+    metadata_parser.set_defaults(func=_cmd_export_backend_metadata)
 
     smoke_parser = subparsers.add_parser("smoke-demo", help="Run an end-to-end demo with synthetic temp assets")
     smoke_parser.add_argument("--out-dir", required=True)
@@ -228,6 +237,15 @@ def _cmd_preflight_vertex(args: argparse.Namespace) -> int:
         write_json(Path(args.json_out).expanduser().resolve(), result)
     print(json.dumps(result, indent=2, ensure_ascii=False))
     return 0 if result["ok"] else 1
+
+
+def _cmd_export_backend_metadata(args: argparse.Namespace) -> int:
+    if args.out:
+        metadata = write_backend_metadata(Path(args.input), Path(args.out))
+    else:
+        metadata = export_backend_metadata(Path(args.input))
+    print(json.dumps(metadata, indent=2, ensure_ascii=False))
+    return 0
 
 
 def _cmd_smoke_demo(args: argparse.Namespace) -> int:

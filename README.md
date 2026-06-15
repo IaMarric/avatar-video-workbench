@@ -29,6 +29,8 @@ projects, or provider-specific secrets.
   motion storyboard MP4 from a source still.
 - Renders Vertex AI CustomJob specs from safe templates.
 - Stages and submits a real LTX image-to-video CustomJob on Vertex AI.
+- Exports public-safe backend metadata for comparing LTX runs with ComfyUI or
+  other workflows.
 - Runs a synthetic smoke demo outside the repository to prove the pipeline.
 - Scans a folder before publication for credentials, absolute local paths,
   private cloud references, generated media, and model artifacts.
@@ -112,6 +114,17 @@ avw submit-ltx-i2v \
 The command stages the runner, config, and input image to GCS, then creates a
 Vertex CustomJob. Outputs are written to the run prefix under GCS.
 
+Export backend metadata for comparison:
+
+```bash
+avw export-backend-metadata \
+  --input runs/demo-avatar/config/ltx_i2v.yaml \
+  --out runs/demo-avatar/reports/backend-metadata.json
+```
+
+The export keeps prompt, model, dimensions, seed, sampling, and LoRA scale
+metadata while omitting generated media, local paths, and cloud object URIs.
+
 Run the publication safety scan:
 
 ```bash
@@ -144,6 +157,8 @@ tests/         Unit tests
   diagram.
 - [Roadmap](docs/roadmap.md): technical roadmap for reproducibility, safety,
   and backend support.
+- [Backend metadata](docs/backend-metadata.md): public-safe comparison reports
+  for LTX and ComfyUI-style workflows.
 - [Contributing](CONTRIBUTING.md): setup, quality checks, and safety rules.
 
 ## Scope

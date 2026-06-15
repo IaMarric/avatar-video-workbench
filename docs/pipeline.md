@@ -133,6 +133,10 @@ Record:
 - runtime and cost;
 - failure notes.
 
+Use `avw export-backend-metadata` to turn an LTX config or runtime manifest
+into a public-safe comparison JSON before copying settings into a ComfyUI
+workflow or spreadsheet.
+
 ## 7. Production Rule
 
 A workflow is not production-ready until it can be rerun from tracked config,

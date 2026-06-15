@@ -180,6 +180,7 @@ def _run_ltx_i2v(config: dict, input_image_path: Path, output_dir: Path) -> dict
         "fps": int(config["fps"]),
         "seed": int(config["seed"]),
         "num_inference_steps": total_steps,
+        "guidance_scale": float(config["guidance_scale"]),
         "generation_seconds": round(generation_seconds, 3),
         "video_bytes": output_path.stat().st_size,
         "lora_weights_path": str(lora_weights_path) if lora_weights_path else None,

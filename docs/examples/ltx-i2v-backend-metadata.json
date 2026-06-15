@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.0",
+  "source": {
+    "tool": "avatar-video-workbench",
+    "source_type": "ltx_i2v_config"
+  },
+  "backend": {
+    "name": "ltx2_i2v",
+    "runtime": "diffusers"
+  },
+  "model": {
+    "id": "dg845/LTX-2.3-Diffusers"
+  },
+  "prompt": {
+    "positive": "demoavatar person, handheld phone video, walking through a quiet city street at golden hour",
+    "negative": "distorted face, extra fingers, text, watermark"
+  },
+  "video": {
+    "width": 512,
+    "height": 512,
+    "frames": 17,
+    "fps": 8,
+    "duration_seconds": 2.125
+  },
+  "sampling": {
+    "seed": 1234,
+    "steps": 6,
+    "guidance_scale": 2.5
+  },
+  "lora": {
+    "enabled": true,
+    "scale": 0.85,
+    "artifact": {
+      "kind": "lora_weights",
+      "reference": "private_external_artifact"
+    }
+  },
+  "runtime_metrics": {},
+  "comfyui_comparison": {
+    "model": "dg845/LTX-2.3-Diffusers",
+    "positive_prompt": "demoavatar person, handheld phone video, walking through a quiet city street at golden hour",
+    "negative_prompt": "distorted face, extra fingers, text, watermark",
+    "width": 512,
+    "height": 512,
+    "frames": 17,
+    "fps": 8,
+    "seed": 1234,
+    "steps": 6,
+    "guidance_scale": 2.5,
+    "lora_enabled": true,
+    "lora_scale": 0.85
+  },
+  "privacy": {
+    "generated_media_omitted": true,
+    "private_paths_omitted": true,
+    "external_artifact_uris_omitted": true
+  }
+}
