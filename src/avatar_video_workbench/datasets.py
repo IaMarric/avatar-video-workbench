@@ -11,6 +11,7 @@ from PIL import Image, ImageOps
 
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
+PUBLICATION_PATH_PARTS = {".github", "docs", "src", "templates", "tests"}
 
 
 @dataclass(frozen=True)
@@ -45,10 +46,22 @@ def validate_dataset(options: DatasetValidationOptions) -> dict[str, Any]:
     sizes: Counter[str] = Counter()
     caption_terms: Counter[str] = Counter()
     hashes: Counter[str] = Counter()
+    checked_caption_count = 0
+    trigger_caption_count = 0
 
     if not images_dir.exists():
         problems.append({"code": "missing_images_dir", "path": str(images_dir)})
         return _result(images_dir, options, [], [], sizes, caption_terms, hashes, problems)
+
+    public_parts = PUBLICATION_PATH_PARTS.intersection(images_dir.parts)
+    if public_parts and images_dir.name != ".gitkeep":
+        problems.append(
+            {
+                "code": "dataset_in_publication_path",
+                "path": str(images_dir),
+                "path_part": sorted(public_parts)[0],
+            }
+        )
 
     images = image_paths(images_dir)
     captions = sorted(path for path in images_dir.iterdir() if path.is_file() and path.suffix.lower() == ".txt")
@@ -65,8 +78,12 @@ def validate_dataset(options: DatasetValidationOptions) -> dict[str, Any]:
         caption = caption_path.read_text(encoding="utf-8").strip()
         if not caption:
             problems.append({"code": "empty_caption", "file": caption_path.name})
-        if options.require_trigger and options.trigger not in caption:
-            problems.append({"code": "missing_trigger", "file": caption_path.name})
+        if caption:
+            checked_caption_count += 1
+            if options.trigger in caption:
+                trigger_caption_count += 1
+            elif options.require_trigger:
+                problems.append({"code": "missing_trigger", "file": caption_path.name})
 
         for term in _caption_terms(caption, options.trigger):
             caption_terms[term] += 1
@@ -88,6 +105,15 @@ def validate_dataset(options: DatasetValidationOptions) -> dict[str, Any]:
     for digest, count in hashes.items():
         if count > 1:
             problems.append({"code": "duplicate_image_hash", "sha256": digest, "count": str(count)})
+
+    if options.require_trigger and checked_caption_count and trigger_caption_count != checked_caption_count:
+        problems.append(
+            {
+                "code": "trigger_coverage_incomplete",
+                "captions_with_trigger": str(trigger_caption_count),
+                "caption_count": str(checked_caption_count),
+            }
+        )
 
     return _result(images_dir, options, images, captions, sizes, caption_terms, hashes, problems)
 
@@ -129,10 +155,10 @@ def _result(
         "trigger": options.trigger,
         "image_count": len(images),
         "caption_count": len(captions),
+        "trigger_caption_count": sum(1 for path in captions if options.trigger in path.read_text(encoding="utf-8", errors="replace")),
         "unique_image_hashes": len(hashes),
         "sizes": dict(sizes.most_common()),
         "caption_terms": dict(caption_terms.most_common()),
         "problems": problems,
         "ok": not problems and len(images) == len(captions) and len(images) >= options.min_images,
     }
-

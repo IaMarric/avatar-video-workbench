@@ -10,7 +10,7 @@ from .cloud import LtxI2VSubmitOptions, LtxLoraTrainSubmitOptions, submit_ltx_i2
 from .config import WorkbenchError, write_json, write_yaml
 from .datasets import DatasetValidationOptions, validate_dataset
 from .experiments import CompileRunOptions, SmokeDemoOptions, compile_run, create_smoke_demo
-from .publication import findings_as_dicts, scan_publication
+from .publication import findings_as_dicts, format_findings, scan_publication
 from .vertex import preflight_vertex_job, render_vertex_job
 
 
@@ -329,6 +329,8 @@ def _cmd_scan_publication(args: argparse.Namespace) -> int:
     rows = findings_as_dicts(findings)
     if args.json_out:
         write_json(Path(args.json_out).expanduser().resolve(), rows)
+    if findings:
+        print(format_findings(findings), file=sys.stderr)
     print(json.dumps(rows, indent=2, ensure_ascii=False))
     return 1 if any(row["severity"] == "error" for row in rows) else 0
 

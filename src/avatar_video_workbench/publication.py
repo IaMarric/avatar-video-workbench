@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
@@ -63,6 +64,19 @@ TEXT_EXTENSIONS = {
     ".yml",
 }
 
+REMEDIATION_HINTS = {
+    "absolute_home_path": "Replace local absolute paths with placeholders or relative paths.",
+    "api_token_assignment": "Move secrets to environment variables or a secret manager.",
+    "gcp_project_context": "Use placeholder project IDs in public examples.",
+    "gcs_uri": "Use placeholder GCS URIs in public docs and configs.",
+    "generated_media": "Keep generated media under ignored run/output directories.",
+    "image_asset": "Keep source and generated images outside the public repository.",
+    "model_checkpoint": "Keep model weights and LoRA checkpoints outside git.",
+    "private_key": "Remove private keys and rotate the exposed credential.",
+    "service_account_json": "Remove service account JSON and use OAuth or secret manager flows.",
+    "unreadable_file": "Fix permissions or remove the unreadable file from the release surface.",
+}
+
 
 @dataclass(frozen=True)
 class Finding:
@@ -117,6 +131,27 @@ def findings_as_dicts(findings: Iterable[Finding]) -> list[dict[str, object]]:
         }
         for item in findings
     ]
+
+
+def format_findings(findings: Iterable[Finding]) -> str:
+    items = list(findings)
+    if not items:
+        return "Publication scan found no issues."
+
+    grouped: dict[tuple[str, str], list[Finding]] = defaultdict(list)
+    for item in items:
+        grouped[(item.severity, item.code)].append(item)
+
+    lines = [f"Publication scan found {len(items)} issue(s):"]
+    for (severity, code), group in sorted(grouped.items()):
+        lines.append(f"{severity.upper()} {code} ({len(group)})")
+        hint = REMEDIATION_HINTS.get(code)
+        if hint:
+            lines.append(f"  hint: {hint}")
+        for item in group:
+            location = item.path if item.line == 0 else f"{item.path}:{item.line}"
+            lines.append(f"  - {location}: {item.excerpt}")
+    return "\n".join(lines)
 
 
 def _iter_candidate_files(root: Path) -> Iterable[Path]:

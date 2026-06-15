@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from avatar_video_workbench.publication import scan_publication
+from avatar_video_workbench.publication import format_findings, scan_publication
 
 
 def test_scan_rejects_service_account_marker(tmp_path: Path) -> None:
@@ -29,3 +29,13 @@ def test_scan_rejects_generated_media_files(tmp_path: Path) -> None:
     findings = scan_publication(tmp_path)
 
     assert any(item.code == "generated_media" and item.severity == "error" for item in findings)
+
+
+def test_format_findings_groups_by_code_and_adds_hints(tmp_path: Path) -> None:
+    (tmp_path / "sample.mp4").write_bytes(b"fake video")
+
+    output = format_findings(scan_publication(tmp_path))
+
+    assert "ERROR generated_media (1)" in output
+    assert "hint: Keep generated media under ignored run/output directories." in output
+    assert "sample.mp4" in output
