@@ -63,10 +63,18 @@ avw validate-dataset \
   --out runs/demo-avatar/reports/dataset-validation.json
 ```
 
-Run a local smoke test:
+Run the reproducible synthetic smoke demo:
 
 ```bash
-scripts/smoke-demo.sh
+scripts/synthetic_smoke_demo.sh
+```
+
+Or run the core commands directly:
+
+```bash
+avw smoke-demo --out-dir /tmp/avatar-video-workbench-smoke --force
+avw preflight-vertex --job-yaml /tmp/avatar-video-workbench-smoke/compiled/jobs/vertex-custom-job.yaml
+avw scan-publication .
 ```
 
 Generate a themed LoRA dataset from one authorized photo:

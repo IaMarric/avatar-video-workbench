@@ -5,18 +5,29 @@ generated media outside git.
 
 ## Local Smoke Demo
 
+Run the reproducible terminal demo from a clean checkout:
+
+```bash
+scripts/synthetic_smoke_demo.sh
+```
+
+The script prepares `.venv` if needed, then runs the same workflow manually shown
+below. Generated media is written only under `/tmp/avatar-video-workbench-smoke`.
+
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -e ".[test]"
 scripts/smoke-demo.sh
 ```
 
-Expected result:
+Expected output:
 
-- the smoke demo writes a synthetic source image, manifest, contact sheet, and
-  storyboard under `/tmp/avatar-video-workbench-smoke`;
-- Vertex preflight validates the rendered CustomJob YAML;
-- publication scan returns `[]`.
+- `avw smoke-demo` prints a JSON manifest with generated paths under
+  `/tmp/avatar-video-workbench-smoke` (or the platform-resolved temp path) and
+  writes synthetic demo images, captions, a contact sheet, and a storyboard there;
+- `avw preflight-vertex` prints JSON containing `"ok": true` and `"errors": []`
+  for the generated `compiled/jobs/vertex-custom-job.yaml`;
+- `avw scan-publication .` prints exactly `[]`.
 
 Do not copy files from `/tmp/avatar-video-workbench-smoke` into git unless they
 are plain configuration or documentation assets that pass the publication scan.
