@@ -31,6 +31,8 @@ projects, or provider-specific secrets.
 - Stages and submits a real LTX image-to-video CustomJob on Vertex AI.
 - Exports public-safe backend metadata for comparing LTX runs with ComfyUI or
   other workflows.
+- Writes sanitized Vertex run reports from CustomJob metadata, optional logs,
+  and backend output metadata.
 - Runs a synthetic smoke demo outside the repository to prove the pipeline.
 - Scans a folder before publication for credentials, absolute local paths,
   private cloud references, generated media, and model artifacts.
@@ -125,6 +127,15 @@ avw export-backend-metadata \
 The export keeps prompt, model, dimensions, seed, sampling, and LoRA scale
 metadata while omitting generated media, local paths, and cloud object URIs.
 
+Write a sanitized Vertex run report:
+
+```bash
+avw vertex-run-report \
+  --job-name "$VERTEX_CUSTOM_JOB_NAME" \
+  --region "$AVW_REGION" \
+  --out runs/demo-avatar/reports/vertex-run-report.json
+```
+
 Run the publication safety scan:
 
 ```bash
@@ -159,6 +170,8 @@ tests/         Unit tests
   and backend support.
 - [Backend metadata](docs/backend-metadata.md): public-safe comparison reports
   for LTX and ComfyUI-style workflows.
+- [Vertex run reports](docs/vertex-run-reports.md): sanitized CustomJob,
+  output, and log summaries.
 - [Pre-staged model assets](docs/model-assets.md): private checkpoint and text
   encoder layouts for repeatable Vertex runs.
 - [Contributing](CONTRIBUTING.md): setup, quality checks, and safety rules.

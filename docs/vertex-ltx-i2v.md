@@ -65,3 +65,8 @@ The GCS output prefix contains:
 - copied input/config files for audit.
 
 Generated outputs stay outside git.
+
+Use `avw vertex-run-report` after a CustomJob finishes to produce a sanitized
+review report from the Vertex job metadata. Use `avw export-backend-metadata`
+on the runtime manifest when you also want model, prompt, sampling, and LoRA
+settings attached to that report.

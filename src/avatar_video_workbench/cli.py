@@ -13,6 +13,7 @@ from .datasets import DatasetValidationOptions, validate_dataset
 from .experiments import CompileRunOptions, SmokeDemoOptions, compile_run, create_smoke_demo
 from .publication import findings_as_dicts, format_findings, scan_publication
 from .vertex import preflight_vertex_job, render_vertex_job
+from .vertex_reports import VertexRunReportOptions, create_vertex_run_report
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -59,6 +60,19 @@ def main(argv: list[str] | None = None) -> int:
     metadata_parser.add_argument("--input", required=True, help="LTX I2V config, runtime manifest, or submission manifest")
     metadata_parser.add_argument("--out", help="Optional JSON output path")
     metadata_parser.set_defaults(func=_cmd_export_backend_metadata)
+
+    vertex_report_parser = subparsers.add_parser(
+        "vertex-run-report",
+        help="Write a sanitized Vertex CustomJob run report",
+    )
+    vertex_report_source = vertex_report_parser.add_mutually_exclusive_group(required=True)
+    vertex_report_source.add_argument("--job-json", help="Path to a gcloud CustomJob describe JSON payload")
+    vertex_report_source.add_argument("--job-name", help="Vertex CustomJob name to describe with gcloud")
+    vertex_report_parser.add_argument("--region", help="Vertex region, required with --job-name")
+    vertex_report_parser.add_argument("--logs-json", help="Optional gcloud logs JSON array or JSONL export")
+    vertex_report_parser.add_argument("--output-metadata", help="Optional backend metadata JSON from export-backend-metadata")
+    vertex_report_parser.add_argument("--out", required=True, help="Report JSON output path")
+    vertex_report_parser.set_defaults(func=_cmd_vertex_run_report)
 
     smoke_parser = subparsers.add_parser("smoke-demo", help="Run an end-to-end demo with synthetic temp assets")
     smoke_parser.add_argument("--out-dir", required=True)
@@ -245,6 +259,21 @@ def _cmd_export_backend_metadata(args: argparse.Namespace) -> int:
     else:
         metadata = export_backend_metadata(Path(args.input))
     print(json.dumps(metadata, indent=2, ensure_ascii=False))
+    return 0
+
+
+def _cmd_vertex_run_report(args: argparse.Namespace) -> int:
+    report = create_vertex_run_report(
+        VertexRunReportOptions(
+            job_json=Path(args.job_json) if args.job_json else None,
+            job_name=args.job_name,
+            region=args.region,
+            logs_json=Path(args.logs_json) if args.logs_json else None,
+            output_metadata=Path(args.output_metadata) if args.output_metadata else None,
+            out_path=Path(args.out),
+        )
+    )
+    print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0
 
 
