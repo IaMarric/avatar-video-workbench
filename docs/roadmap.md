@@ -19,9 +19,8 @@ repeat, inspect, and compare while keeping private assets out of git.
 
 ### Safer Public Examples
 
-- Add a repo-native architecture diagram that uses text or Mermaid instead of
-  generated media.
-- Add a short terminal demo for the synthetic smoke workflow.
+- Extend the repo-native architecture diagram when new backends are added.
+- Keep the synthetic terminal demo aligned with CLI changes.
 - Expand safe example configs that do not require private credentials.
 
 ### Run Evidence

@@ -8,10 +8,7 @@ generated media outside git.
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -e ".[test]"
-.venv/bin/avw smoke-demo --out-dir /tmp/avatar-video-workbench-smoke --force
-.venv/bin/avw preflight-vertex \
-  --job-yaml /tmp/avatar-video-workbench-smoke/compiled/jobs/vertex-custom-job.yaml
-.venv/bin/avw scan-publication .
+scripts/smoke-demo.sh
 ```
 
 Expected result:

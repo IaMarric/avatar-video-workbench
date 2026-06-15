@@ -1,5 +1,8 @@
 # Avatar Video Workbench
 
+[![CI](https://github.com/IaMarric/avatar-video-workbench/actions/workflows/ci.yml/badge.svg)](https://github.com/IaMarric/avatar-video-workbench/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 Avatar Video Workbench is a small control plane for reproducible avatar media
 experiments:
 
@@ -59,8 +62,7 @@ avw validate-dataset \
 Run a local smoke test:
 
 ```bash
-avw smoke-demo --out-dir /tmp/avatar-video-workbench-smoke --force
-avw preflight-vertex --job-yaml /tmp/avatar-video-workbench-smoke/compiled/jobs/vertex-custom-job.yaml
+scripts/smoke-demo.sh
 ```
 
 Generate a themed LoRA dataset from one authorized photo:
@@ -138,6 +140,8 @@ tests/         Unit tests
 ## Project Links
 
 - [Public demo](docs/demo.md): synthetic smoke demo and safe sharing rules.
+- [Architecture](docs/architecture.md): repository boundary and pipeline
+  diagram.
 - [Roadmap](docs/roadmap.md): technical roadmap for reproducibility, safety,
   and backend support.
 - [Contributing](CONTRIBUTING.md): setup, quality checks, and safety rules.
