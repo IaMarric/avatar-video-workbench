@@ -2,8 +2,16 @@
 title: Avatar Video Workbench Report Checker
 sdk: gradio
 app_file: app.py
-pinned: false
+pinned: true
 license: mit
+short_description: Validate public-safe Avatar Video Workbench reports.
+suggested_hardware: cpu-basic
+tags:
+  - avatar-video-workbench
+  - vertex-ai
+  - lora
+  - image-to-video
+  - gradio
 ---
 
 # Hugging Face Space
