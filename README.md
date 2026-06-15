@@ -4,7 +4,7 @@ Avatar Video Workbench is a small control plane for reproducible avatar media
 experiments:
 
 ```text
-character brief -> curated image dataset -> benchmark package -> Vertex LTX image-to-video job -> output audit
+authorized source photo -> Nano Banana 2 variants -> LTX LoRA dataset -> LTX LoRA training -> LTX 2.3 video
 ```
 
 The project is built for fictional or properly authorized characters. It does
@@ -14,6 +14,11 @@ projects, or provider-specific secrets.
 ## What It Does
 
 - Validates LoRA image datasets with paired captions.
+- Turns one authorized source photo into ten themed training variants with
+  Nano Banana 2 (`gemini-3.1-flash-image`), using a public-safe pirate preset by
+  default.
+- Writes an LTX trainer dataset and can submit an official LTX LoRA training
+  CustomJob to Vertex AI.
 - Creates a neutral project layout for avatar experiments.
 - Compiles a complete experiment package with validation report, benchmark
   prompts, dataset manifest, run manifest, and optional Vertex AI job YAML.
@@ -24,8 +29,7 @@ projects, or provider-specific secrets.
 - Runs a synthetic smoke demo outside the repository to prove the pipeline.
 - Scans a folder before publication for credentials, absolute local paths,
   private cloud references, generated media, and model artifacts.
-- Provides example configs for Qwen-style image LoRA and LTX/Wan-style
-  image-to-video pipelines.
+- Lets LTX 2.3 image-to-video jobs load a trained LoRA from a private GCS URI.
 
 ## Install
 
@@ -59,6 +63,34 @@ avw smoke-demo --out-dir /tmp/avatar-video-workbench-smoke --force
 avw preflight-vertex --job-yaml /tmp/avatar-video-workbench-smoke/compiled/jobs/vertex-custom-job.yaml
 ```
 
+Generate a themed LoRA dataset from one authorized photo:
+
+```bash
+avw generate-character-dataset \
+  --source-image "$AUTHORIZED_SOURCE_PHOTO" \
+  --out-dir runs/pirate-avatar \
+  --trigger "avwpirate person" \
+  --theme pirate \
+  --variant-count 10 \
+  --vertex-project "$GOOGLE_CLOUD_PROJECT" \
+  --vertex-location "$GOOGLE_CLOUD_LOCATION" \
+  --auth-mode gcloud
+```
+
+Train an LTX LoRA from that dataset:
+
+```bash
+avw submit-ltx-lora-train \
+  --run-id "$AVW_RUN_ID" \
+  --gcs-root "$PRIVATE_GCS_RUN_PREFIX" \
+  --dataset-dir runs/pirate-avatar \
+  --trigger "avwpirate person" \
+  --model-uri "$LTX_23_CHECKPOINT_GCS_URI" \
+  --text-encoder-uri "$GEMMA_TEXT_ENCODER_GCS_URI" \
+  --region "$AVW_REGION" \
+  --container-image "$AVW_CONTAINER_IMAGE"
+```
+
 Submit a real LTX image-to-video job to Vertex AI:
 
 ```bash
@@ -68,7 +100,8 @@ avw submit-ltx-i2v \
   --input-image "$AVW_INPUT_IMAGE" \
   --prompt "$AVW_PROMPT" \
   --region "$AVW_REGION" \
-  --container-image "$AVW_CONTAINER_IMAGE"
+  --container-image "$AVW_CONTAINER_IMAGE" \
+  --lora-weights-uri "$TRAINED_LORA_GCS_URI"
 ```
 
 The command stages the runner, config, and input image to GCS, then creates a
@@ -107,6 +140,9 @@ provider credentials stay outside git.
 
 Local smoke demos and Vertex runs write generated media only under the output
 directory or GCS prefix you choose. Do not commit those outputs.
+
+See [docs/pirate-character-flow.md](docs/pirate-character-flow.md) for the
+complete photo-to-LoRA-to-video route.
 
 ## Suggested GitHub Topics
 

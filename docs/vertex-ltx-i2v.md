@@ -30,6 +30,7 @@ export AVW_INPUT_IMAGE="/path/to/source-image.png"
 export AVW_REGION="asia-southeast1"
 export AVW_CONTAINER_IMAGE="region-docker.pkg.dev/project/repository/gpu-runtime:tag"
 export AVW_PROMPT="A handheld phone video of the same fictional avatar making a subtle natural head movement."
+export AVW_LORA_URI="$TRAINED_LTX_LORA_GCS_URI"
 ```
 
 Submit:
@@ -41,12 +42,16 @@ avw submit-ltx-i2v \
   --input-image "$AVW_INPUT_IMAGE" \
   --prompt "$AVW_PROMPT" \
   --region "$AVW_REGION" \
-  --container-image "$AVW_CONTAINER_IMAGE"
+  --container-image "$AVW_CONTAINER_IMAGE" \
+  --lora-weights-uri "$AVW_LORA_URI"
 ```
 
 For a fast infrastructure smoke, keep the defaults: `256x256`, `17` frames and
 `4` inference steps. Increase resolution, frames and steps only after the
 pipeline succeeds end to end.
+
+Omit `--lora-weights-uri` for a base-model I2V run. Include it after
+`submit-ltx-lora-train` has produced a LoRA checkpoint in a private GCS prefix.
 
 ## Outputs
 

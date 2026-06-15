@@ -16,7 +16,28 @@ Start with a short character brief:
 Do not commit private source images. Commit only templates, examples, and
 metadata that are safe to publish.
 
-## 2. Dataset Curation
+## 2. Themed Dataset Generation
+
+For the default public demo route, start with one authorized source photo and
+generate a themed dataset:
+
+```bash
+avw generate-character-dataset \
+  --source-image "$AUTHORIZED_SOURCE_PHOTO" \
+  --out-dir runs/pirate-avatar \
+  --trigger "avwpirate person" \
+  --theme pirate \
+  --variant-count 10 \
+  --auth-mode gcloud
+```
+
+With Google credentials configured, this uses Nano Banana 2
+(`gemini-3.1-flash-image`) to create ten family-friendly pirate variants. It
+also writes `ltx_trainer/dataset.json` for the official LTX trainer.
+
+Use `--plan-only` when you only want prompts and metadata.
+
+## 3. Dataset Curation
 
 Use paired image/caption files:
 
@@ -64,20 +85,20 @@ Add `--with-previews` to also render:
 These previews are generated review artifacts. They are useful for local
 inspection but must stay outside git.
 
-## 3. Image LoRA
+## 4. LTX LoRA
 
-Train the first LoRA on still images before video. Keep output in cloud storage
-or local ignored directories. Store only sanitized configs and reports.
+Train an LTX LoRA from the generated image dataset. Keep output in cloud
+storage or local ignored directories. Store only sanitized configs and reports.
 
 Recommended first target:
 
-- 20-60 curated images;
+- 10-30 curated themed images;
 - balanced close, half-body, full-body, indoor, outdoor;
 - one stable trigger token;
 - LoRA rank 16-64 depending on model and dataset;
-- public-demo benchmark prompts before moving to video.
+- public-demo benchmark prompts before increasing training steps.
 
-## 4. Still Benchmarks
+## 5. Still Benchmarks
 
 Generate a fixed still grid:
 
@@ -92,7 +113,7 @@ Generate a fixed still grid:
 
 Pick 1-3 hero stills for video comparison.
 
-## 5. Image-To-Video Comparison
+## 6. Image-To-Video Comparison
 
 Compare models with the same hero still and prompt:
 
@@ -111,7 +132,7 @@ Record:
 - runtime and cost;
 - failure notes.
 
-## 6. Production Rule
+## 7. Production Rule
 
 A workflow is not production-ready until it can be rerun from tracked config,
 not only from a manually clicked UI graph.

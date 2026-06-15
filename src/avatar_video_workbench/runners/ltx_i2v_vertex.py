@@ -31,6 +31,11 @@ def main() -> int:
     _download_file(client, input_image_uri, input_path)
 
     config = _read_yaml(config_path)
+    lora_uri = os.environ.get("AVW_LTX_LORA_URI") or config.get("lora_weights_uri")
+    if lora_uri:
+        lora_path = workspace / "lora" / Path(urlparse(str(lora_uri)).path).name
+        _download_file(client, str(lora_uri), lora_path)
+        config["lora_weights_path"] = str(lora_path)
     shutil.copy2(config_path, output_dir / "ltx_i2v.yaml")
     shutil.copy2(input_path, output_dir / input_path.name)
 
@@ -87,6 +92,16 @@ def _run_ltx_i2v(config: dict, input_image_path: Path, output_dir: Path) -> dict
     model_id = str(config["model_id"])
     print("Loading LTX pipeline " + json.dumps({"model_id": model_id, "dtype": str(dtype)}, sort_keys=True), flush=True)
     pipe = LTX2ImageToVideoPipeline.from_pretrained(model_id, torch_dtype=dtype)
+    lora_weights_path = config.get("lora_weights_path")
+    if lora_weights_path:
+        if not hasattr(pipe, "load_lora_weights"):
+            raise RuntimeError("This LTX Diffusers pipeline does not expose load_lora_weights")
+        print("Loading LoRA weights " + json.dumps({"path": str(lora_weights_path), "scale": config.get("lora_scale", 1.0)}), flush=True)
+        pipe.load_lora_weights(str(lora_weights_path))
+        if float(config.get("lora_scale", 1.0)) != 1.0:
+            if not hasattr(pipe, "set_adapters"):
+                raise RuntimeError("LoRA scale requires a pipeline with set_adapters support")
+            pipe.set_adapters(["default"], adapter_weights=[float(config["lora_scale"])])
     if config.get("enable_vae_tiling", True) and hasattr(pipe, "vae") and hasattr(pipe.vae, "enable_tiling"):
         pipe.vae.enable_tiling()
 
@@ -162,6 +177,8 @@ def _run_ltx_i2v(config: dict, input_image_path: Path, output_dir: Path) -> dict
         "num_inference_steps": total_steps,
         "generation_seconds": round(generation_seconds, 3),
         "video_bytes": output_path.stat().st_size,
+        "lora_weights_path": str(lora_weights_path) if lora_weights_path else None,
+        "lora_scale": float(config.get("lora_scale", 1.0)),
     }
 
 

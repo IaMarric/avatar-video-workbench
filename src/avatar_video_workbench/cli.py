@@ -5,7 +5,8 @@ import json
 import sys
 from pathlib import Path
 
-from .cloud import LtxI2VSubmitOptions, submit_ltx_i2v
+from .character_flow import CharacterDatasetOptions, create_character_dataset
+from .cloud import LtxI2VSubmitOptions, LtxLoraTrainSubmitOptions, submit_ltx_i2v, submit_ltx_lora_train
 from .config import WorkbenchError, write_json, write_yaml
 from .datasets import DatasetValidationOptions, validate_dataset
 from .experiments import CompileRunOptions, SmokeDemoOptions, compile_run, create_smoke_demo
@@ -55,6 +56,26 @@ def main(argv: list[str] | None = None) -> int:
     smoke_parser.add_argument("--force", action="store_true")
     smoke_parser.set_defaults(func=_cmd_smoke_demo)
 
+    character_parser = subparsers.add_parser(
+        "generate-character-dataset",
+        help="Turn one authorized photo into a themed LoRA image dataset with Nano Banana 2",
+    )
+    character_parser.add_argument("--source-image", required=True)
+    character_parser.add_argument("--out-dir", required=True)
+    character_parser.add_argument("--trigger", required=True)
+    character_parser.add_argument("--theme", default="pirate")
+    character_parser.add_argument("--variant-count", type=int, default=10)
+    character_parser.add_argument("--model", default="gemini-3.1-flash-image")
+    character_parser.add_argument("--vertex-project")
+    character_parser.add_argument("--vertex-location")
+    character_parser.add_argument("--auth-mode", choices=["sdk", "gcloud"], default="sdk")
+    character_parser.add_argument("--plan-only", action="store_true")
+    character_parser.add_argument("--ltx-model-path")
+    character_parser.add_argument("--ltx-text-encoder-path")
+    character_parser.add_argument("--training-steps", type=int, default=1200)
+    character_parser.add_argument("--resolution-bucket", default="512x512x1")
+    character_parser.set_defaults(func=_cmd_generate_character_dataset)
+
     ltx_parser = subparsers.add_parser("submit-ltx-i2v", help="Stage and submit a real LTX image-to-video Vertex job")
     ltx_parser.add_argument("--run-id", required=True)
     ltx_parser.add_argument("--gcs-root", required=True)
@@ -79,7 +100,36 @@ def main(argv: list[str] | None = None) -> int:
     ltx_parser.add_argument("--seed", type=int, default=1234)
     ltx_parser.add_argument("--no-spot", action="store_true")
     ltx_parser.add_argument("--dry-run", action="store_true")
+    ltx_parser.add_argument("--lora-weights-uri")
+    ltx_parser.add_argument("--lora-scale", type=float, default=1.0)
     ltx_parser.set_defaults(func=_cmd_submit_ltx_i2v)
+
+    lora_train_parser = subparsers.add_parser(
+        "submit-ltx-lora-train",
+        help="Stage a generated dataset and submit an LTX LoRA trainer CustomJob",
+    )
+    lora_train_parser.add_argument("--run-id", required=True)
+    lora_train_parser.add_argument("--gcs-root", required=True)
+    lora_train_parser.add_argument("--dataset-dir", required=True)
+    lora_train_parser.add_argument("--trigger", required=True)
+    lora_train_parser.add_argument("--model-uri", required=True)
+    lora_train_parser.add_argument("--text-encoder-uri", required=True)
+    lora_train_parser.add_argument("--region", required=True)
+    lora_train_parser.add_argument("--container-image", required=True)
+    lora_train_parser.add_argument("--machine-type", default="a3-highgpu-1g")
+    lora_train_parser.add_argument("--accelerator-type", default="NVIDIA_H100_80GB")
+    lora_train_parser.add_argument("--accelerator-count", type=int, default=1)
+    lora_train_parser.add_argument("--boot-disk-type", default="pd-ssd")
+    lora_train_parser.add_argument("--boot-disk-size-gb", type=int, default=1000)
+    lora_train_parser.add_argument("--staging-dir", default="runs/vertex-staging")
+    lora_train_parser.add_argument("--resolution-bucket", default="512x512x1")
+    lora_train_parser.add_argument("--training-steps", type=int, default=1200)
+    lora_train_parser.add_argument("--trainer-repo", default="https://github.com/Lightricks/LTX-2.git")
+    lora_train_parser.add_argument("--trainer-ref", default="main")
+    lora_train_parser.add_argument("--validation-prompt")
+    lora_train_parser.add_argument("--no-spot", action="store_true")
+    lora_train_parser.add_argument("--dry-run", action="store_true")
+    lora_train_parser.set_defaults(func=_cmd_submit_ltx_lora_train)
 
     scan_parser = subparsers.add_parser("scan-publication", help="Scan a project before public release")
     scan_parser.add_argument("path")
@@ -182,6 +232,29 @@ def _cmd_smoke_demo(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_generate_character_dataset(args: argparse.Namespace) -> int:
+    manifest = create_character_dataset(
+        CharacterDatasetOptions(
+            source_image=Path(args.source_image),
+            out_dir=Path(args.out_dir),
+            trigger=args.trigger,
+            theme=args.theme,
+            variant_count=args.variant_count,
+            model=args.model,
+            vertex_project=args.vertex_project,
+            vertex_location=args.vertex_location,
+            auth_mode=args.auth_mode,
+            plan_only=args.plan_only,
+            ltx_model_path=args.ltx_model_path,
+            ltx_text_encoder_path=args.ltx_text_encoder_path,
+            training_steps=args.training_steps,
+            resolution_bucket=args.resolution_bucket,
+        )
+    )
+    print(json.dumps(manifest, indent=2, ensure_ascii=False))
+    return 0
+
+
 def _cmd_submit_ltx_i2v(args: argparse.Namespace) -> int:
     result = submit_ltx_i2v(
         LtxI2VSubmitOptions(
@@ -206,6 +279,38 @@ def _cmd_submit_ltx_i2v(args: argparse.Namespace) -> int:
             num_inference_steps=args.num_inference_steps,
             guidance_scale=args.guidance_scale,
             seed=args.seed,
+            spot=not args.no_spot,
+            submit=not args.dry_run,
+            lora_weights_uri=args.lora_weights_uri,
+            lora_scale=args.lora_scale,
+        )
+    )
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    return 0
+
+
+def _cmd_submit_ltx_lora_train(args: argparse.Namespace) -> int:
+    result = submit_ltx_lora_train(
+        LtxLoraTrainSubmitOptions(
+            run_id=args.run_id,
+            gcs_root=args.gcs_root,
+            dataset_dir=Path(args.dataset_dir),
+            trigger=args.trigger,
+            model_uri=args.model_uri,
+            text_encoder_uri=args.text_encoder_uri,
+            region=args.region,
+            container_image=args.container_image,
+            machine_type=args.machine_type,
+            accelerator_type=args.accelerator_type,
+            accelerator_count=args.accelerator_count,
+            boot_disk_type=args.boot_disk_type,
+            boot_disk_size_gb=args.boot_disk_size_gb,
+            staging_dir=Path(args.staging_dir),
+            resolution_bucket=args.resolution_bucket,
+            training_steps=args.training_steps,
+            trainer_repo=args.trainer_repo,
+            trainer_ref=args.trainer_ref,
+            validation_prompt=args.validation_prompt,
             spot=not args.no_spot,
             submit=not args.dry_run,
         )
