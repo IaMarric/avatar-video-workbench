@@ -9,7 +9,7 @@ description = "A clean control plane for reproducible avatar LoRA and image-to-v
 readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
-authors = [{ name = "Ivan Martinez" }]
+authors = [{ name = "IaMarric" }]
 keywords = ["avatar", "lora", "video-generation", "vertex-ai", "comfyui", "i2v"]
 dependencies = [
   "google-genai>=1.0",
