@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "avatar-video-workbench"
-version = "0.1.0"
+version = "0.1.1"
 description = "A clean control plane for reproducible avatar LoRA and image-to-video pipelines."
 readme = "README.md"
 requires-python = ">=3.11"

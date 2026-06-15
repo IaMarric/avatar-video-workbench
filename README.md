@@ -164,6 +164,7 @@ tests/         Unit tests
 ## Project Links
 
 - [Public demo](docs/demo.md): synthetic smoke demo and safe sharing rules.
+- [Changelog](CHANGELOG.md): release history and notable changes.
 - [Architecture](docs/architecture.md): repository boundary and pipeline
   diagram.
 - [Roadmap](docs/roadmap.md): technical roadmap for reproducibility, safety,
