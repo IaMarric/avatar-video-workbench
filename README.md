@@ -138,6 +138,8 @@ tests/         Unit tests
 ## Project Links
 
 - [Public demo](docs/demo.md): synthetic smoke demo and safe sharing rules.
+- [Roadmap](docs/roadmap.md): technical roadmap for reproducibility, safety,
+  and backend support.
 - [Contributing](CONTRIBUTING.md): setup, quality checks, and safety rules.
 
 ## Scope
