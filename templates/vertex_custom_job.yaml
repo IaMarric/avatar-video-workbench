@@ -1,0 +1,30 @@
+displayName: ${display_name}
+jobSpec:
+  scheduling:
+    strategy: SPOT
+  workerPoolSpecs:
+    - machineSpec:
+        machineType: ${machine_type}
+        acceleratorType: ${accelerator_type}
+        acceleratorCount: ${accelerator_count}
+      diskSpec:
+        bootDiskType: pd-ssd
+        bootDiskSizeGb: ${boot_disk_size_gb}
+      replicaCount: 1
+      containerSpec:
+        imageUri: ${image_uri}
+        command:
+          - bash
+          - -lc
+        args:
+          - ${command}
+        env:
+          - name: CONFIG_URI
+            value: ${env_CONFIG_URI}
+          - name: INPUT_IMAGE_URI
+            value: ${env_INPUT_IMAGE_URI}
+          - name: OUTPUT_URI
+            value: ${env_OUTPUT_URI}
+          - name: HF_HOME
+            value: ${env_HF_HOME}
+

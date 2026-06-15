@@ -1,0 +1,27 @@
+run:
+  id: qwen-character-lora-v1
+  output_root: gs://YOUR_BUCKET/runs/qwen-character-lora-v1
+
+dataset:
+  gcs_uri: gs://YOUR_BUCKET/runs/qwen-character-lora-v1/dataset
+  trigger: demoavatar person
+  resolution: 1024
+  caption_dropout_rate: 0.05
+
+training:
+  base_model: Qwen/Qwen-Image
+  trainer: ai-toolkit
+  lora_rank: 32
+  lora_alpha: 32
+  learning_rate: 0.0001
+  max_steps: 1600
+  precision: bf16
+  save_every_n_steps: 200
+
+vertex:
+  display_name: qwen-character-lora-v1
+  machine_type: a3-highgpu-1g
+  accelerator_type: NVIDIA_H100_80GB
+  accelerator_count: 1
+  scheduling_strategy: SPOT
+

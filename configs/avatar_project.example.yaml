@@ -1,0 +1,18 @@
+project:
+  name: demo-avatar
+  trigger: demoavatar person
+  character_policy: fictional_or_authorized_public_demo
+
+dataset:
+  images_dir: dataset/images
+  min_images: 12
+  caption_rule: "Every image has a same-stem .txt caption containing the trigger token."
+
+pipeline:
+  - curate_dataset
+  - validate_dataset
+  - train_image_lora
+  - generate_still_benchmarks
+  - select_hero_stills
+  - run_i2v_comparison
+  - evaluate_outputs
