@@ -7,8 +7,9 @@ from pathlib import Path
 
 from .config import WorkbenchError, write_json, write_yaml
 from .datasets import DatasetValidationOptions, validate_dataset
+from .experiments import CompileRunOptions, SmokeDemoOptions, compile_run, create_smoke_demo
 from .publication import findings_as_dicts, scan_publication
-from .vertex import render_vertex_job
+from .vertex import preflight_vertex_job, render_vertex_job
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -34,6 +35,23 @@ def main(argv: list[str] | None = None) -> int:
     render_parser.add_argument("--template", required=True)
     render_parser.add_argument("--out", required=True)
     render_parser.set_defaults(func=_cmd_render_vertex_job)
+
+    compile_parser = subparsers.add_parser("compile-run", help="Compile a validated avatar experiment package")
+    compile_parser.add_argument("--project-config", required=True)
+    compile_parser.add_argument("--out-dir", required=True)
+    compile_parser.add_argument("--vertex-config")
+    compile_parser.add_argument("--vertex-template")
+    compile_parser.set_defaults(func=_cmd_compile_run)
+
+    preflight_parser = subparsers.add_parser("preflight-vertex", help="Validate a rendered Vertex CustomJob YAML")
+    preflight_parser.add_argument("--job-yaml", required=True)
+    preflight_parser.add_argument("--json-out")
+    preflight_parser.set_defaults(func=_cmd_preflight_vertex)
+
+    smoke_parser = subparsers.add_parser("smoke-demo", help="Run an end-to-end demo with synthetic temp assets")
+    smoke_parser.add_argument("--out-dir", required=True)
+    smoke_parser.add_argument("--force", action="store_true")
+    smoke_parser.set_defaults(func=_cmd_smoke_demo)
 
     scan_parser = subparsers.add_parser("scan-publication", help="Scan a project before public release")
     scan_parser.add_argument("path")
@@ -105,6 +123,33 @@ def _cmd_render_vertex_job(args: argparse.Namespace) -> int:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(output, encoding="utf-8")
     print(str(out_path))
+    return 0
+
+
+def _cmd_compile_run(args: argparse.Namespace) -> int:
+    manifest = compile_run(
+        CompileRunOptions(
+            project_config=Path(args.project_config),
+            out_dir=Path(args.out_dir),
+            vertex_config=Path(args.vertex_config) if args.vertex_config else None,
+            vertex_template=Path(args.vertex_template) if args.vertex_template else None,
+        )
+    )
+    print(json.dumps(manifest, indent=2, ensure_ascii=False))
+    return 0
+
+
+def _cmd_preflight_vertex(args: argparse.Namespace) -> int:
+    result = preflight_vertex_job(Path(args.job_yaml))
+    if args.json_out:
+        write_json(Path(args.json_out).expanduser().resolve(), result)
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    return 0 if result["ok"] else 1
+
+
+def _cmd_smoke_demo(args: argparse.Namespace) -> int:
+    manifest = create_smoke_demo(SmokeDemoOptions(out_dir=Path(args.out_dir), force=args.force))
+    print(json.dumps(manifest, indent=2, ensure_ascii=False))
     return 0
 
 

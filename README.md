@@ -15,7 +15,10 @@ projects, or provider-specific secrets.
 
 - Validates LoRA image datasets with paired captions.
 - Creates a neutral project layout for avatar experiments.
+- Compiles a complete experiment package with validation report, benchmark
+  prompts, manifest, and optional Vertex AI job YAML.
 - Renders Vertex AI CustomJob specs from safe templates.
+- Runs a synthetic smoke demo outside the repository to prove the pipeline.
 - Scans a folder before publication for credentials, absolute local paths,
   private cloud references, generated media, and model artifacts.
 - Provides example configs for Qwen-style image LoRA and LTX/Wan-style
@@ -61,6 +64,23 @@ Run the publication safety scan:
 avw scan-publication .
 ```
 
+Run an end-to-end smoke test with synthetic temporary assets:
+
+```bash
+avw smoke-demo --out-dir /tmp/avatar-video-workbench-smoke --force
+avw preflight-vertex --job-yaml /tmp/avatar-video-workbench-smoke/compiled/jobs/vertex-custom-job.yaml
+```
+
+Compile a real local experiment package:
+
+```bash
+avw compile-run \
+  --project-config runs/demo-avatar/avatar_project.yaml \
+  --out-dir runs/demo-avatar/compiled \
+  --vertex-config configs/ltx_i2v.example.yaml \
+  --vertex-template templates/vertex_custom_job.yaml
+```
+
 ## Repository Layout
 
 ```text
@@ -73,9 +93,9 @@ tests/         Unit tests
 
 ## Scope
 
-This repo is intentionally the control plane, not a bundled model zoo. Large
-models, LoRA checkpoints, generated videos, source datasets, and provider
-credentials stay outside git.
+This repo is intentionally the experiment control plane, not a bundled model
+zoo. Large models, LoRA checkpoints, generated videos, source datasets, and
+provider credentials stay outside git.
 
 ## Suggested GitHub Topics
 

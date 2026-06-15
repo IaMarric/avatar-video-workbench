@@ -40,6 +40,21 @@ Run:
 avw validate-dataset --images-dir dataset/images --trigger "demoavatar person"
 ```
 
+Compile the experiment package:
+
+```bash
+avw compile-run \
+  --project-config avatar_project.yaml \
+  --out-dir compiled
+```
+
+This writes:
+
+- `compiled/manifest.json`;
+- `compiled/reports/dataset-validation.json`;
+- `compiled/prompts/benchmark-prompts.yaml`;
+- `compiled/jobs/vertex-custom-job.yaml` when a Vertex config/template is provided.
+
 ## 3. Image LoRA
 
 Train the first LoRA on still images before video. Keep output in cloud storage
@@ -91,3 +106,6 @@ Record:
 
 A workflow is not production-ready until it can be rerun from tracked config,
 not only from a manually clicked UI graph.
+
+Use `avw smoke-demo --out-dir /tmp/avatar-video-workbench-smoke --force` after
+installation to verify the local pipeline without committing generated assets.

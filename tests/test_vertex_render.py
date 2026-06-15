@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from avatar_video_workbench.vertex import render_vertex_job
+from avatar_video_workbench.vertex import preflight_vertex_job, render_vertex_job
 
 
 def test_render_vertex_job_from_template(tmp_path: Path) -> None:
@@ -36,3 +36,53 @@ env:
     assert "image: REGION-docker.pkg.dev/PROJECT/REPOSITORY/image:latest" in rendered
     assert "config: gs://YOUR_BUCKET/config.yaml" in rendered
 
+
+def test_preflight_vertex_job_rejects_placeholders(tmp_path: Path) -> None:
+    job_yaml = tmp_path / "job.yaml"
+    job_yaml.write_text(
+        """
+displayName: demo-job
+jobSpec:
+  workerPoolSpecs:
+    - machineSpec:
+        machineType: a3-highgpu-1g
+        acceleratorType: NVIDIA_H100_80GB
+        acceleratorCount: 1
+      containerSpec:
+        imageUri: REGION-docker.pkg.dev/PROJECT/REPOSITORY/image:latest
+        command:
+          - python
+          - run.py
+""",
+        encoding="utf-8",
+    )
+
+    result = preflight_vertex_job(job_yaml)
+
+    assert result["ok"] is False
+    assert any(item["code"] == "unresolved_placeholder" for item in result["errors"])
+
+
+def test_preflight_vertex_job_accepts_complete_job(tmp_path: Path) -> None:
+    job_yaml = tmp_path / "job.yaml"
+    job_yaml.write_text(
+        """
+displayName: demo-job
+jobSpec:
+  workerPoolSpecs:
+    - machineSpec:
+        machineType: a3-highgpu-1g
+        acceleratorType: NVIDIA_H100_80GB
+        acceleratorCount: 1
+      containerSpec:
+        imageUri: us-central1-docker.pkg.dev/demo-project/runtime/image:latest
+        command:
+          - python
+          - run.py
+""",
+        encoding="utf-8",
+    )
+
+    result = preflight_vertex_job(job_yaml)
+
+    assert result["ok"] is True

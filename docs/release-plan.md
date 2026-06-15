@@ -3,18 +3,21 @@
 ## v0.1.0
 
 - Dataset validation CLI.
+- Experiment package compiler.
+- Synthetic end-to-end smoke demo.
 - Publication safety scanner.
+- Vertex CustomJob preflight.
 - Vertex job template renderer.
 - Public-demo example configs.
 - Pipeline and publication docs.
 - Unit tests.
+- GitHub Actions validation.
 
 ## v0.2.0
 
 - Run registry.
 - Cost and runtime report parser.
 - ComfyUI workflow metadata extractor.
-- GitHub Actions validation.
 
 ## v0.3.0
 
