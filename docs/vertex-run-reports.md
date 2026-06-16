@@ -66,6 +66,8 @@ The report includes:
 - create/start/end/update timestamps;
 - duration when start and end times are available;
 - worker pool machine type, accelerator type/count, replica count, and disk;
+- cost estimate metadata with elapsed runtime, machine types, total accelerator count,
+  and estimated accelerator-hours when timing and accelerator data are available;
 - optional backend output summary;
 - optional log summary.
 

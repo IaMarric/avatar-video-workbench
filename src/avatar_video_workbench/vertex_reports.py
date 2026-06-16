@@ -44,6 +44,7 @@ def build_vertex_run_report(
 ) -> dict[str, Any]:
     job_name = str(job_payload.get("name") or "")
     timing = _timing(job_payload)
+    cost_estimate = _cost_estimate(timing, job_payload)
     report: dict[str, Any] = {
         "schema_version": "1.0",
         "source": {
@@ -59,6 +60,7 @@ def build_vertex_run_report(
             "hardware": {
                 "worker_pools": _worker_pool_summaries(job_payload),
             },
+            "cost_estimate": cost_estimate,
         },
         "privacy": {
             "project_ids_omitted": True,
@@ -176,6 +178,32 @@ def _timing(job_payload: dict[str, Any]) -> dict[str, Any]:
     if start and end:
         timing["duration_seconds"] = round((end - start).total_seconds(), 3)
     return _drop_none(timing)
+
+
+def _cost_estimate(timing: dict[str, Any], job_payload: dict[str, Any]) -> dict[str, Any]:
+    duration_seconds = timing.get("duration_seconds")
+    pools = _worker_pool_summaries(job_payload)
+    machine_types = sorted(
+        {str(pool["machine_type"]) for pool in pools if pool.get("machine_type")}
+    )
+    accelerator_count = sum(_pool_accelerator_count(pool) for pool in pools)
+    estimate: dict[str, Any] = {
+        "elapsed_runtime_seconds": duration_seconds,
+        "machine_types": machine_types,
+        "accelerator_count": accelerator_count or None,
+    }
+    if isinstance(duration_seconds, int | float) and accelerator_count:
+        estimate["estimated_accelerator_hours"] = round(
+            duration_seconds * accelerator_count / 3600, 6
+        )
+    return _drop_none(estimate)
+
+
+def _pool_accelerator_count(pool: dict[str, Any]) -> int:
+    accelerator = pool.get("accelerator") if isinstance(pool.get("accelerator"), dict) else {}
+    count = accelerator.get("count")
+    replicas = pool.get("replica_count")
+    return (count if isinstance(count, int) else 0) * (replicas if isinstance(replicas, int) else 1)
 
 
 def _output_summary(metadata: dict[str, Any]) -> dict[str, Any]:

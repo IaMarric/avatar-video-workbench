@@ -53,6 +53,23 @@ def test_build_vertex_run_report_sanitizes_project_and_summarizes_hardware() -> 
     assert "private-project" not in json.dumps(report, sort_keys=True)
 
 
+def test_build_vertex_run_report_estimates_accelerator_hours_across_replicas() -> None:
+    payload = _job_payload()
+    payload["startTime"] = "2026-06-15T15:00:00Z"
+    payload["endTime"] = "2026-06-15T16:30:00Z"
+    payload["jobSpec"]["workerPoolSpecs"][0]["machineSpec"]["acceleratorCount"] = 2
+    payload["jobSpec"]["workerPoolSpecs"][0]["replicaCount"] = 3
+
+    report = build_vertex_run_report(payload)
+
+    assert report["vertex"]["cost_estimate"] == {
+        "elapsed_runtime_seconds": 5400.0,
+        "machine_types": ["a3-highgpu-1g"],
+        "accelerator_count": 6,
+        "estimated_accelerator_hours": 9.0,
+    }
+
+
 def test_build_vertex_run_report_summarizes_logs_and_output_metadata() -> None:
     output_metadata = {
         "backend": {"name": "ltx2_i2v", "runtime": "diffusers"},
