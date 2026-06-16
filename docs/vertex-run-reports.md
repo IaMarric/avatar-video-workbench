@@ -70,4 +70,7 @@ The report includes:
 - optional log summary.
 
 Generated videos, source images, object URIs, bucket names, service account
-identities, and full Vertex resource names are not included.
+identities, and full Vertex resource names are not included. See
+[examples/vertex-run-report.json](examples/vertex-run-report.json) for a public-safe
+example and [`schemas/vertex-run-report.schema.json`](../schemas/vertex-run-report.schema.json)
+for the JSON Schema contract.

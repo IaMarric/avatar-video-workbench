@@ -43,4 +43,5 @@ avw export-backend-metadata \
 ```
 
 See [examples/ltx-i2v-backend-metadata.json](examples/ltx-i2v-backend-metadata.json)
-for the public-safe JSON shape.
+for the public-safe JSON shape. The contract is documented in
+[`schemas/backend-metadata.schema.json`](../schemas/backend-metadata.schema.json).
