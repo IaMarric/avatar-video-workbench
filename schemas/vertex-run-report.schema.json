@@ -1,0 +1,292 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/IaMarric/avatar-video-workbench/schemas/vertex-run-report.schema.json",
+  "title": "Avatar Video Workbench Vertex Run Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source",
+    "vertex",
+    "privacy"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tool",
+        "source_type"
+      ],
+      "properties": {
+        "tool": {
+          "const": "avatar-video-workbench"
+        },
+        "source_type": {
+          "const": "vertex_custom_job"
+        }
+      }
+    },
+    "vertex": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "custom_job_id",
+        "location",
+        "display_name",
+        "state",
+        "timing"
+      ],
+      "properties": {
+        "custom_job_id": {
+          "$ref": "#/$defs/publicString"
+        },
+        "location": {
+          "$ref": "#/$defs/publicString"
+        },
+        "display_name": {
+          "$ref": "#/$defs/publicString"
+        },
+        "state": {
+          "$ref": "#/$defs/publicString"
+        },
+        "timing": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "created_at": {
+              "$ref": "#/$defs/publicString"
+            },
+            "started_at": {
+              "$ref": "#/$defs/publicString"
+            },
+            "ended_at": {
+              "$ref": "#/$defs/publicString"
+            },
+            "updated_at": {
+              "$ref": "#/$defs/publicString"
+            },
+            "duration_seconds": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "hardware": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "worker_pools"
+          ],
+          "properties": {
+            "worker_pools": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "machine_type": {
+                    "$ref": "#/$defs/publicString"
+                  },
+                  "accelerator": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "type": {
+                        "$ref": "#/$defs/publicString"
+                      },
+                      "count": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  },
+                  "replica_count": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "disk": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "boot_disk_type": {
+                        "$ref": "#/$defs/publicString"
+                      },
+                      "boot_disk_size_gb": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "cost_estimate": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "elapsed_runtime_seconds": {
+              "type": "number",
+              "minimum": 0
+            },
+            "machine_types": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/publicString"
+              }
+            },
+            "accelerator_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "estimated_accelerator_hours": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "backend": {
+          "$ref": "#/$defs/publicValue"
+        },
+        "model": {
+          "$ref": "#/$defs/publicValue"
+        },
+        "video": {
+          "$ref": "#/$defs/publicValue"
+        },
+        "sampling": {
+          "$ref": "#/$defs/publicValue"
+        },
+        "lora": {
+          "$ref": "#/$defs/publicValue"
+        },
+        "runtime_metrics": {
+          "$ref": "#/$defs/publicValue"
+        },
+        "privacy": {
+          "$ref": "#/$defs/publicValue"
+        }
+      }
+    },
+    "logs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "entry_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "severity_counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "first_timestamp": {
+          "$ref": "#/$defs/publicString"
+        },
+        "last_timestamp": {
+          "$ref": "#/$defs/publicString"
+        },
+        "last_message": {
+          "$ref": "#/$defs/publicString"
+        },
+        "last_error": {
+          "$ref": "#/$defs/publicString"
+        }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project_ids_omitted",
+        "bucket_names_omitted",
+        "service_accounts_omitted",
+        "generated_media_omitted"
+      ],
+      "properties": {
+        "project_ids_omitted": {
+          "const": true
+        },
+        "bucket_names_omitted": {
+          "const": true
+        },
+        "service_accounts_omitted": {
+          "const": true
+        },
+        "generated_media_omitted": {
+          "const": true
+        }
+      }
+    }
+  },
+  "$defs": {
+    "publicString": {
+      "type": "string",
+      "not": {
+        "anyOf": [
+          {
+            "pattern": "\\bgs://"
+          },
+          {
+            "pattern": "projects/[^/\\s]+"
+          },
+          {
+            "pattern": "/(?:home|Users|workspace)/[^\\s\"']+"
+          },
+          {
+            "pattern": "@[a-z0-9._-]+\\.iam\\.gserviceaccount\\.com"
+          }
+        ]
+      }
+    },
+    "publicValue": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "$ref": "#/$defs/publicString"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/publicValue"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/publicValue"
+          }
+        }
+      ]
+    }
+  }
+}

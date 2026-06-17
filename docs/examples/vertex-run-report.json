@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "source": {
+    "tool": "avatar-video-workbench",
+    "source_type": "vertex_custom_job"
+  },
+  "vertex": {
+    "custom_job_id": "1234567890",
+    "location": "us-central1",
+    "display_name": "avatar-ltx-smoke",
+    "state": "JOB_STATE_SUCCEEDED",
+    "timing": {
+      "created_at": "2026-06-15T15:00:00Z",
+      "started_at": "2026-06-15T15:01:00Z",
+      "ended_at": "2026-06-15T15:03:30Z",
+      "updated_at": "2026-06-15T15:03:45Z",
+      "duration_seconds": 150.0
+    },
+    "hardware": {
+      "worker_pools": [
+        {
+          "index": 0,
+          "machine_type": "a3-highgpu-1g",
+          "accelerator": {
+            "type": "NVIDIA_H100_80GB",
+            "count": 1
+          },
+          "replica_count": 1,
+          "disk": {
+            "boot_disk_type": "pd-ssd",
+            "boot_disk_size_gb": 1000
+          }
+        }
+      ]
+    },
+    "cost_estimate": {
+      "elapsed_runtime_seconds": 150.0,
+      "machine_types": [
+        "a3-highgpu-1g"
+      ],
+      "accelerator_count": 1,
+      "estimated_accelerator_hours": 0.041667
+    }
+  },
+  "privacy": {
+    "project_ids_omitted": true,
+    "bucket_names_omitted": true,
+    "service_accounts_omitted": true,
+    "generated_media_omitted": true
+  }
+}

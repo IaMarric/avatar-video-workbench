@@ -1,0 +1,294 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/IaMarric/avatar-video-workbench/schemas/backend-metadata.schema.json",
+  "title": "Avatar Video Workbench Backend Metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source",
+    "backend",
+    "model",
+    "prompt",
+    "video",
+    "sampling",
+    "lora",
+    "runtime_metrics",
+    "privacy"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tool",
+        "source_type"
+      ],
+      "properties": {
+        "tool": {
+          "const": "avatar-video-workbench"
+        },
+        "source_type": {
+          "enum": [
+            "ltx_i2v_config",
+            "ltx_i2v_runtime_manifest",
+            "ltx_i2v_submission_manifest"
+          ]
+        }
+      }
+    },
+    "backend": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "runtime"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/publicString"
+        },
+        "runtime": {
+          "$ref": "#/$defs/publicString"
+        },
+        "provider": {
+          "$ref": "#/$defs/publicString"
+        }
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/publicString"
+        }
+      }
+    },
+    "prompt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "positive",
+        "negative"
+      ],
+      "properties": {
+        "positive": {
+          "$ref": "#/$defs/publicString"
+        },
+        "negative": {
+          "$ref": "#/$defs/publicString"
+        }
+      }
+    },
+    "video": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height",
+        "frames",
+        "fps",
+        "duration_seconds"
+      ],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "frames": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fps": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "duration_seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "sampling": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "seed",
+        "steps"
+      ],
+      "properties": {
+        "seed": {
+          "type": "integer"
+        },
+        "steps": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "guidance_scale": {
+          "type": "number"
+        }
+      }
+    },
+    "lora": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "scale": {
+          "type": "number"
+        },
+        "artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "reference"
+          ],
+          "properties": {
+            "kind": {
+              "const": "lora_weights"
+            },
+            "reference": {
+              "const": "private_external_artifact"
+            }
+          }
+        }
+      }
+    },
+    "runtime_metrics": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/publicValue"
+      }
+    },
+    "comfyui_comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "$ref": "#/$defs/publicString"
+        },
+        "positive_prompt": {
+          "$ref": "#/$defs/publicString"
+        },
+        "negative_prompt": {
+          "$ref": "#/$defs/publicString"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "frames": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fps": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "seed": {
+          "type": "integer"
+        },
+        "steps": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "guidance_scale": {
+          "type": "number"
+        },
+        "lora_enabled": {
+          "type": "boolean"
+        },
+        "lora_scale": {
+          "type": "number"
+        }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generated_media_omitted",
+        "private_paths_omitted",
+        "external_artifact_uris_omitted"
+      ],
+      "properties": {
+        "generated_media_omitted": {
+          "const": true
+        },
+        "private_paths_omitted": {
+          "const": true
+        },
+        "external_artifact_uris_omitted": {
+          "const": true
+        }
+      }
+    }
+  },
+  "$defs": {
+    "publicString": {
+      "type": "string",
+      "not": {
+        "anyOf": [
+          {
+            "pattern": "\\bgs://"
+          },
+          {
+            "pattern": "projects/[^/\\s]+"
+          },
+          {
+            "pattern": "/(?:home|Users|workspace)/[^\\s\"']+"
+          }
+        ]
+      }
+    },
+    "publicValue": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "$ref": "#/$defs/publicString"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/publicValue"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/publicValue"
+          }
+        }
+      ]
+    }
+  }
+}
