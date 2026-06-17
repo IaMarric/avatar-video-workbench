@@ -132,6 +132,30 @@
               }
             }
           }
+        },
+        "cost_estimate": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "elapsed_runtime_seconds": {
+              "type": "number",
+              "minimum": 0
+            },
+            "machine_types": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/publicString"
+              }
+            },
+            "accelerator_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "estimated_accelerator_hours": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
         }
       }
     },

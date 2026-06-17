@@ -193,9 +193,28 @@ def test_generated_reports_validate_against_public_schemas(tmp_path: Path) -> No
             "startTime": "2026-06-15T15:01:00Z",
             "endTime": "2026-06-15T15:03:30Z",
             "updateTime": "2026-06-15T15:03:45Z",
-            "jobSpec": {"workerPoolSpecs": []},
+            "jobSpec": {
+                "workerPoolSpecs": [
+                    {
+                        "machineSpec": {
+                            "machineType": "a3-highgpu-1g",
+                            "acceleratorType": "NVIDIA_H100_80GB",
+                            "acceleratorCount": 1,
+                        },
+                        "replicaCount": 1,
+                    }
+                ]
+            },
         }
     )
+    # Sibling PR #28 adds this public accelerator-hour estimate to generated
+    # Vertex reports; keep the schema contract compatible when the branches combine.
+    vertex["vertex"]["cost_estimate"] = {
+        "elapsed_runtime_seconds": 150.0,
+        "machine_types": ["a3-highgpu-1g"],
+        "accelerator_count": 1,
+        "estimated_accelerator_hours": 0.041667,
+    }
 
     _validate(backend, _load_json("schemas/backend-metadata.schema.json"))
     _validate(vertex, _load_json("schemas/vertex-run-report.schema.json"))

@@ -32,6 +32,14 @@
           }
         }
       ]
+    },
+    "cost_estimate": {
+      "elapsed_runtime_seconds": 150.0,
+      "machine_types": [
+        "a3-highgpu-1g"
+      ],
+      "accelerator_count": 1,
+      "estimated_accelerator_hours": 0.041667
     }
   },
   "privacy": {
